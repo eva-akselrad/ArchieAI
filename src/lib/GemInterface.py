@@ -10,6 +10,7 @@ import json
 
 from ollama import chat, AsyncClient
 from ollama import ChatResponse
+from duckduckgo_search import DDGS
 
 class AiInterface:
     """
@@ -128,6 +129,31 @@ class AiInterface:
             self._log(f"Unexpected error when scraping {url}: {e}")
             return "An unexpected error occurred while scraping the website"
 
+    def web_search(self, query: str, max_results: int = 5) -> str:
+        """
+        Perform a web search using DuckDuckGo and return formatted results.
+        This is used when scraped data doesn't contain the needed information.
+        """
+        try:
+            self._log(f"Performing web search for: {query}")
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, max_results=max_results))
+            
+            if not results:
+                return "No web search results found."
+            
+            formatted_results = []
+            for i, result in enumerate(results, 1):
+                title = result.get('title', 'No title')
+                body = result.get('body', 'No description')
+                url = result.get('href', 'No URL')
+                formatted_results.append(f"{i}. {title}\n   {body}\n   Source: {url}")
+            
+            return "\n\n".join(formatted_results)
+        except Exception as e:
+            self._log(f"Error during web search: {e}")
+            return "An error occurred during web search"
+
 
     async def generate_text_async(self, prompt: str, system_prompt: str = "") -> str:
         """
@@ -201,14 +227,25 @@ class AiInterface:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
     
-    async def Archie(self, query: str) -> str:
+    async def Archie(self, query: str, conversation_history: list = None) -> str:
         """
         Main async entry point for the Archie AI assistant.
         Uses scraped data from JSON file to provide context for answering queries.
+        Falls back to web search if needed.
         """
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
         
+        # Build context with conversation history
+        history_context = ""
+        if conversation_history:
+            history_context = "\n\nConversation History:\n"
+            for msg in conversation_history[-5:]:  # Last 5 messages for context
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                history_context += f"{role.upper()}: {content}\n"
+        
+        # First attempt with scraped data
         system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
 You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
@@ -216,11 +253,32 @@ You are made by students for a final project. You must be factual and accurate b
 Respond based on your knowledge up to 2025.
 
 Use the following content to better answer the query:
-{json.dumps(results, indent=2)}"""
+{json.dumps(results, indent=2)}
+{history_context}"""
 
-        return await self.generate_text_async(query, system_prompt=system_prompt)
+        # Get initial response
+        initial_response = await self.generate_text_async(query, system_prompt=system_prompt)
+        
+        # Check if we need to do a web search (if response indicates insufficient info)
+        if any(phrase in initial_response.lower() for phrase in ["i don't know", "i don't have", "not sure", "cannot find", "no information"]):
+            self._log("Initial response insufficient, performing web search")
+            search_results = await self._run_in_executor(self.web_search, query)
+            
+            # Generate new response with web search results
+            enhanced_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University.
+
+The user asked: {query}
+
+Here is additional information from a web search:
+{search_results}
+
+Please provide a helpful answer based on this information.{history_context}"""
+            
+            return await self.generate_text_async(query, system_prompt=enhanced_prompt)
+        
+        return initial_response
     
-    async def Archie_streaming(self, query: str) -> AsyncIterator[str]:
+    async def Archie_streaming(self, query: str, conversation_history: list = None) -> AsyncIterator[str]:
         """
         Streaming version of Archie that yields tokens as they are generated.
         This provides a better user experience by showing the AI "thinking" in real-time.
@@ -232,14 +290,43 @@ Use the following content to better answer the query:
         with open("data/scrape_results.json", "r", encoding="utf-8") as f:
             results = json.load(f)
         
-        system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
+        # Build context with conversation history
+        history_context = ""
+        if conversation_history:
+            history_context = "\n\nConversation History:\n"
+            for msg in conversation_history[-5:]:  # Last 5 messages for context
+                role = msg.get("role", "user")
+                content = msg.get("content", "")
+                history_context += f"{role.upper()}: {content}\n"
+        
+        # Try to determine if we need web search first
+        # For streaming, we'll check keywords in the query itself
+        needs_web_search = any(keyword in query.lower() for keyword in [
+            "current", "latest", "recent", "today", "now", "news", "weather"
+        ])
+        
+        if needs_web_search:
+            self._log("Query suggests need for current info, performing web search")
+            search_results = await self._run_in_executor(self.web_search, query)
+            
+            system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University.
+
+Here is information from a web search:
+{search_results}
+
+Use the following university data as additional context:
+{json.dumps(results, indent=2)}
+{history_context}"""
+        else:
+            system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
 You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
 
 Respond based on your knowledge up to 2025.
 
 Use the following content to better answer the query:
-{json.dumps(results, indent=2)}"""
+{json.dumps(results, indent=2)}
+{history_context}"""
 
         async for token in self.generate_text_streaming(query, system_prompt=system_prompt):
             yield token
