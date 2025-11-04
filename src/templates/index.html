@@ -603,14 +603,32 @@
         sessions.forEach(session => {
           const li = document.createElement('li');
           li.className = 'session-item';
-          li.innerHTML = `
-            <div>${new Date(session.created_at).toLocaleDateString()}</div>
-            <p class="session-preview">${session.preview || 'New chat'}</p>
-            <div class="session-actions">
-              <button onclick="loadSession('${session.session_id}')">Load</button>
-              <button onclick="deleteSession('${session.session_id}')">Delete</button>
-            </div>
-          `;
+          
+          const dateDiv = document.createElement('div');
+          dateDiv.textContent = new Date(session.created_at).toLocaleDateString();
+          
+          const preview = document.createElement('p');
+          preview.className = 'session-preview';
+          preview.textContent = session.preview || 'New chat';
+          
+          const actions = document.createElement('div');
+          actions.className = 'session-actions';
+          
+          const loadBtn = document.createElement('button');
+          loadBtn.textContent = 'Load';
+          loadBtn.addEventListener('click', () => loadSession(session.session_id));
+          
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.addEventListener('click', () => deleteSession(session.session_id));
+          
+          actions.appendChild(loadBtn);
+          actions.appendChild(deleteBtn);
+          
+          li.appendChild(dateDiv);
+          li.appendChild(preview);
+          li.appendChild(actions);
+          
           sessionList.appendChild(li);
         });
       } catch (err) {

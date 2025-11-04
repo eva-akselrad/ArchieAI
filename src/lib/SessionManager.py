@@ -4,7 +4,7 @@ Handles user accounts, session storage, and chat history.
 """
 import os
 import json
-import uuid
+import secrets
 from datetime import datetime
 from typing import Optional, Dict, List
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -31,7 +31,12 @@ class SessionManager:
         try:
             with open(self.users_file, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            # File doesn't exist yet, return empty dict
+            return {}
+        except json.JSONDecodeError as e:
+            # File is corrupted, log error and return empty dict
+            print(f"Warning: users.json is corrupted: {e}")
             return {}
     
     def _save_users(self, users: Dict):
@@ -75,8 +80,8 @@ class SessionManager:
         return users[email].get("sessions", [])
     
     def create_session(self, user_email: Optional[str] = None) -> str:
-        """Create a new chat session."""
-        session_id = uuid.uuid4().hex
+        """Create a new chat session with cryptographically secure ID."""
+        session_id = secrets.token_urlsafe(32)
         
         session_data = {
             "session_id": session_id,
@@ -110,7 +115,10 @@ class SessionManager:
         try:
             with open(session_file, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Warning: session {session_id} is corrupted: {e}")
             return None
     
     def save_session(self, session_id: str, session_data: Dict):
