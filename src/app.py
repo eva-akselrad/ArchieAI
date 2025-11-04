@@ -209,7 +209,8 @@ def create_new_session():
     session_id = session_manager.create_session(user_email=user_email)
     
     resp = fk.make_response(fk.jsonify({"session_id": session_id}))
-    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+    # Note: In production with HTTPS, add secure=True to all set_cookie calls
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 
 @app.route("/api/sessions/switch/<session_id>", methods=["POST"])
@@ -239,13 +240,21 @@ def gchats():
     # render template and attach session cookie
     resp = fk.make_response(fk.redirect(fk.url_for("index")))
     print(f"New guest session started: {session_id}")
-    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
+    # Note: In production with HTTPS, add secure=True
+    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
     return resp
 @app.route("/chats", methods=["GET", "POST"])
 def chats():
     if fk.request.method == "POST":
         email = fk.request.form.get("email", "").strip()
         password = fk.request.form.get("password", "")
+        
+        # Basic email validation
+        if not email or "@" not in email or len(email) > 255:
+            return fk.render_template("home.html", error="Please provide a valid email address")
+        
+        if not password or len(password) < 6:
+            return fk.render_template("home.html", error="Password must be at least 6 characters")
         
         if email and password:
             # Try to authenticate user
@@ -255,8 +264,9 @@ def chats():
                 
                 resp = fk.make_response(fk.redirect(fk.url_for("index")))
                 print(f"User {email} logged in with session: {session_id}")
-                resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
-                resp.set_cookie("user_email", email, httponly=True, samesite="Lax")
+                # Note: In production with HTTPS, add secure=True
+                resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
+                resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
                 return resp
             else:
                 # User doesn't exist, create new account
@@ -265,8 +275,9 @@ def chats():
                     
                     resp = fk.make_response(fk.redirect(fk.url_for("index")))
                     print(f"New user {email} created with session: {session_id}")
-                    resp.set_cookie("session_id", session_id, httponly=True, samesite="Lax")
-                    resp.set_cookie("user_email", email, httponly=True, samesite="Lax")
+                    # Note: In production with HTTPS, add secure=True
+                    resp.set_cookie("session_id", session_id, httponly=True, samesite="Strict")
+                    resp.set_cookie("user_email", email, httponly=True, samesite="Strict")
                     return resp
                 else:
                     return fk.render_template("home.html", error="Failed to create account")

@@ -5,6 +5,7 @@ Handles user accounts, session storage, and chat history.
 import os
 import json
 import secrets
+import re
 from datetime import datetime
 from typing import Optional, Dict, List
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -70,6 +71,11 @@ class SessionManager:
         
         return check_password_hash(users[email]["password_hash"], password)
     
+    def _is_valid_session_id(self, session_id: str) -> bool:
+        """Validate that session_id is safe to use in file paths."""
+        # Only allow alphanumeric, dash, and underscore characters
+        return bool(re.match(r'^[a-zA-Z0-9_-]+$', session_id)) and len(session_id) <= 64
+    
     def get_user_sessions(self, email: str) -> List[str]:
         """Get all session IDs for a user."""
         users = self._load_users()
@@ -107,6 +113,10 @@ class SessionManager:
     
     def get_session(self, session_id: str) -> Optional[Dict]:
         """Load a session from file."""
+        if not self._is_valid_session_id(session_id):
+            print(f"Warning: invalid session_id format: {session_id}")
+            return None
+        
         session_file = os.path.join(self.sessions_dir, f"{session_id}.json")
         
         if not os.path.exists(session_file):
@@ -123,6 +133,9 @@ class SessionManager:
     
     def save_session(self, session_id: str, session_data: Dict):
         """Save session data to file."""
+        if not self._is_valid_session_id(session_id):
+            raise ValueError(f"Invalid session_id format: {session_id}")
+        
         session_file = os.path.join(self.sessions_dir, f"{session_id}.json")
         with open(session_file, "w", encoding="utf-8") as f:
             json.dump(session_data, f, indent=4, ensure_ascii=False)
@@ -160,6 +173,10 @@ class SessionManager:
     
     def delete_session(self, session_id: str, user_email: Optional[str] = None) -> bool:
         """Delete a chat session."""
+        if not self._is_valid_session_id(session_id):
+            print(f"Warning: invalid session_id format: {session_id}")
+            return False
+        
         session_file = os.path.join(self.sessions_dir, f"{session_id}.json")
         
         if not os.path.exists(session_file):
