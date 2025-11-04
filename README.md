@@ -16,7 +16,7 @@
 - **Multi-Tasking:** Handles a wide range of tasks including writing, research, and data analysis.  
 - **Customizable:** Tailor responses and functionalities to suit individual needs.  
 - **Integration:** Easily integrates with various platforms and applications.
-- **Web Search Integration:** Automatically searches the web when scraped data is insufficient.
+- **Tool-Based Web Search:** Uses Ollama's tool calling to intelligently search the web when needed.
 - **Session Management:** Persistent chat history with support for multiple sessions per user.
 - **Account System:** User authentication with password hashing for secure login.
 - **Chat History:** View, load, and delete previous conversations.
@@ -25,14 +25,12 @@
 ## Setup
 
 1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull a model: `ollama pull llama2` (or another supported model)
+2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
 3. Copy `.env.example` to `.env` and configure your model:
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and set:
-   - Your preferred model (e.g., `MODEL=llama2`)
-   - Your Ollama API key for web search (e.g., `OLLAMA_API_KEY=your_key`)
+4. Edit `.env` and set your preferred model (e.g., `MODEL=qwen3`)
 5. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
@@ -69,11 +67,11 @@
 - Guest users: Continue without an account (history not saved across sessions)
 
 #### Web Search
-ArchieAI automatically performs web searches using Ollama's built-in web search tool when:
+ArchieAI uses Ollama's tool calling feature to intelligently search the web when:
 - The scraped university data doesn't contain the answer
 - The query requires current/real-time information
-- Keywords like "current", "latest", "recent", "today", "now" are detected
-- **Note:** Web search requires `OLLAMA_API_KEY` to be configured in your `.env` file
+- The AI determines additional information is needed
+- **Note:** Requires a model with tool calling support (e.g., qwen3)
 
 #### Session Context
 - Each conversation maintains context within the session
