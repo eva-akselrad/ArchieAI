@@ -6,10 +6,11 @@ All notable changes to ArchieAI will be documented in this file.
 
 ### Added
 - **Web Search Integration**
-  - Integrated DuckDuckGo search for queries not answered by scraped data
+  - Integrated Ollama's native web search tool for queries not answered by scraped data
   - Automatic fallback to web search when AI indicates insufficient information
   - Smart detection of queries requiring current/real-time information
   - Formatted search results with titles, descriptions, and sources
+  - Requires OLLAMA_API_KEY environment variable
 
 - **Session Management**
   - Full session-based conversation context
@@ -55,8 +56,9 @@ All notable changes to ArchieAI will be documented in this file.
 - Session IDs generated using UUID4
 
 ### Dependencies
-- Added `duckduckgo-search==6.3.5` for web search functionality
+- Using Ollama's native `web_search()` function (requires OLLAMA_API_KEY)
 - Added `qrcode==8.2` and `pillow==12.0.0` for QR code generation support
+- Removed `duckduckgo-search` dependency in favor of Ollama's built-in web search
 
 ## Notes
 - All data is stored locally in JSON format

@@ -8,9 +8,8 @@ from bs4 import BeautifulSoup
 from typing import Any, Optional, AsyncIterator
 import json
 
-from ollama import chat, AsyncClient
+from ollama import chat, AsyncClient, web_search
 from ollama import ChatResponse
-from duckduckgo_search import DDGS
 
 class AiInterface:
     """
@@ -129,27 +128,31 @@ class AiInterface:
             self._log(f"Unexpected error when scraping {url}: {e}")
             return "An unexpected error occurred while scraping the website"
 
-    def web_search(self, query: str, max_results: int = 5) -> str:
+    def web_search_ollama(self, query: str, max_results: int = 5) -> str:
         """
-        Perform a web search using DuckDuckGo and return formatted results.
+        Perform a web search using Ollama's built-in web search tool.
         This is used when scraped data doesn't contain the needed information.
+        Note: Requires OLLAMA_API_KEY environment variable to be set.
         """
         try:
-            self._log(f"Performing web search for: {query}")
-            with DDGS() as ddgs:
-                results = list(ddgs.text(query, max_results=max_results))
+            self._log(f"Performing web search via Ollama for: {query}")
+            response = web_search(query, max_results=max_results)
             
-            if not results:
+            if not response.results:
                 return "No web search results found."
             
             formatted_results = []
-            for i, result in enumerate(results, 1):
-                title = result.get('title', 'No title')
-                body = result.get('body', 'No description')
-                url = result.get('href', 'No URL')
-                formatted_results.append(f"{i}. {title}\n   {body}\n   Source: {url}")
+            for i, result in enumerate(response.results, 1):
+                title = result.title or 'No title'
+                content = result.content or 'No description'
+                url = result.url or 'No URL'
+                formatted_results.append(f"{i}. {title}\n   {content}\n   Source: {url}")
             
             return "\n\n".join(formatted_results)
+        except ValueError as e:
+            # Ollama raises ValueError if OLLAMA_API_KEY is not set
+            self._log(f"Web search requires OLLAMA_API_KEY: {e}")
+            return "Web search unavailable: OLLAMA_API_KEY not configured"
         except Exception as e:
             self._log(f"Error during web search: {e}")
             return "An error occurred during web search"
@@ -262,7 +265,7 @@ Use the following content to better answer the query:
         # Check if we need to do a web search (if response indicates insufficient info)
         if any(phrase in initial_response.lower() for phrase in ["i don't know", "i don't have", "not sure", "cannot find", "no information"]):
             self._log("Initial response insufficient, performing web search")
-            search_results = await self._run_in_executor(self.web_search, query)
+            search_results = await self._run_in_executor(self.web_search_ollama, query)
             
             # Generate new response with web search results
             enhanced_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University.
@@ -307,7 +310,7 @@ Please provide a helpful answer based on this information.{history_context}"""
         
         if needs_web_search:
             self._log("Query suggests need for current info, performing web search")
-            search_results = await self._run_in_executor(self.web_search, query)
+            search_results = await self._run_in_executor(self.web_search_ollama, query)
             
             system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University.
 

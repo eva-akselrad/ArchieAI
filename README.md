@@ -30,7 +30,9 @@
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and set your preferred model (e.g., `MODEL=llama2`)
+4. Edit `.env` and set:
+   - Your preferred model (e.g., `MODEL=llama2`)
+   - Your Ollama API key for web search (e.g., `OLLAMA_API_KEY=your_key`)
 5. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
@@ -67,10 +69,11 @@
 - Guest users: Continue without an account (history not saved across sessions)
 
 #### Web Search
-ArchieAI automatically performs web searches when:
+ArchieAI automatically performs web searches using Ollama's built-in web search tool when:
 - The scraped university data doesn't contain the answer
 - The query requires current/real-time information
 - Keywords like "current", "latest", "recent", "today", "now" are detected
+- **Note:** Web search requires `OLLAMA_API_KEY` to be configured in your `.env` file
 
 #### Session Context
 - Each conversation maintains context within the session
