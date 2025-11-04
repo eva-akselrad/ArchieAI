@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from typing import Any, Optional, AsyncIterator
 import json
 
-from ollama import chat, AsyncClient
+from ollama import chat, AsyncClient, web_fetch, web_search
 from ollama import ChatResponse
 
 class AiInterface:
@@ -26,10 +26,12 @@ class AiInterface:
 
     def __init__(
         self,
+        
         debug: bool = False,
         scraper_max_retries: int = 3,
         scraper_backoff_factor: float = 1.0,
         scraper_timeout: int = 15,
+        available_tools = {'web_search': web_search, 'web_fetch': web_fetch}
     ):
         # Load the variables from the .env file into the environment
         load_dotenv()
@@ -105,26 +107,7 @@ class AiInterface:
             self._log(f"Unexpected error when scraping {url}: {e}")
             return "An unexpected error occurred while scraping the website"
 
-    def search_web(self, query: str) -> str:
-        """Search the web for current information
-        
-        This tool is used by the AI to search for information that may not be 
-        available in the university database or when current information is needed.
-        
-        Args:
-            query: The search query to look up on the web
-        
-        Returns:
-            Search results as a formatted string with titles, descriptions, and URLs
-        """
-        try:
-            self._log(f"Tool called: search_web with query: {query}")
-            # Use requests to perform a simple search (could be enhanced with actual search API)
-            # For now, return a placeholder that indicates web search capability
-            return f"Web search results for '{query}': Use real-time data sources or implement actual search API integration here."
-        except Exception as e:
-            self._log(f"Error during web search tool: {e}")
-            return f"Web search error: {str(e)}"
+
 
     async def generate_text_streaming(self, prompt: str, system_prompt: str = "") -> AsyncIterator[str]:
         """
@@ -152,9 +135,11 @@ class AiInterface:
             stream = await async_client.chat(
                 model=self.model,
                 messages=messages,
-                stream=True
-            )
+                stream=True,
+
             
+            )
+
             async for chunk in stream:
                 if 'message' in chunk and 'content' in chunk['message']:
                     yield chunk['message']['content']
@@ -207,42 +192,7 @@ If the university data doesn't contain the information needed, or if the query r
         })
         
         # Call with tools - run in executor since it's synchronous
-        def _chat_with_tools():
-            # First call to get response (may include tool calls)
-            response = chat(
-                model=self.model,
-                messages=messages,
-                tools=[self.search_web]
-            )
-            
-            # Add assistant response to messages
-            messages.append(response.message)
-            
-            # Process tool calls if any
-            if response.message.tool_calls:
-                for tool_call in response.message.tool_calls:
-                    if tool_call.function.name == 'search_web':
-                        # Execute the tool
-                        result = self.search_web(**tool_call.function.arguments)
-                        # Add tool result to messages
-                        messages.append({
-                            'role': 'tool',
-                            'tool_name': tool_call.function.name,
-                            'content': str(result)
-                        })
-                
-                # Get final response with tool results
-                final_response = chat(
-                    model=self.model,
-                    messages=messages,
-                    tools=[self.search_web]
-                )
-                return final_response.message.content
-            
-            return response.message.content
-        
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, _chat_with_tools)
+
     
     async def Archie_streaming(self, query: str, conversation_history: list = None) -> AsyncIterator[str]:
         """
@@ -268,13 +218,14 @@ If the university data doesn't contain the information needed, or if the query r
         
         system_prompt = f"""You are ArchieAI, an AI assistant for Arcadia University. You are here to help students, faculty, and staff with any questions they may have about the university.
 
-You are made by students for a final project. You must be factual and accurate based on the information provided. It is ok to say "I don't know" if you are unsure.
+You are made by students for a final project. You must be factual and accurate based on the information provided.
+History:
+{history_context}
 
-Respond based on your knowledge up to 2025.
-
-Use the following content to better answer the query:
-{json.dumps(results, indent=2)}
-{history_context}"""
+Use the following university data to answer questions You have realtime access to the following data:
+Weather, Events, Dining Hours, IT Resources, Academic Calendar, About Arcadia, General Website Info.
+"""     
+        print(system_prompt)
 
         async for token in self.generate_text_streaming(query, system_prompt=system_prompt):
             yield token
