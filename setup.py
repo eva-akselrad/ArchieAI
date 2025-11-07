@@ -185,7 +185,10 @@ def setup_env_file():
         return False
     
     if env_file.exists():
-        response = input(f"{Colors.WARNING}.env file already exists. Overwrite? (y/N): {Colors.ENDC}").strip().lower()
+        try:
+            response = input(f"{Colors.WARNING}.env file already exists. Overwrite? (y/N): {Colors.ENDC}").strip().lower()
+        except EOFError:
+            response = 'n'
         if response != 'y':
             print_info("Keeping existing .env file")
             return True
@@ -196,7 +199,11 @@ def setup_env_file():
         print_success("Created .env file from .env.example")
         
         # Ask user if they want to configure the model
-        response = input(f"\n{Colors.OKCYAN}Would you like to configure the Ollama model now? (y/N): {Colors.ENDC}").strip().lower()
+        try:
+            response = input(f"\n{Colors.OKCYAN}Would you like to configure the Ollama model now? (y/N): {Colors.ENDC}").strip().lower()
+        except EOFError:
+            response = 'n'
+        
         if response == 'y':
             print_info("\nCommon models:")
             print("  - llama2 (default)")
@@ -205,7 +212,11 @@ def setup_env_file():
             print("  - mistral")
             print("  - codellama")
             
-            model = input(f"\n{Colors.OKCYAN}Enter model name (press Enter for llama2): {Colors.ENDC}").strip()
+            try:
+                model = input(f"\n{Colors.OKCYAN}Enter model name (press Enter for llama2): {Colors.ENDC}").strip()
+            except EOFError:
+                model = ''
+            
             if model:
                 # Update MODEL in .env file
                 with open(env_file, 'r') as f:
@@ -344,7 +355,11 @@ def main():
     print("  2. Rust (experimental - not fully implemented)")
     
     while True:
-        choice = input(f"\n{Colors.OKCYAN}Enter your choice (1 or 2): {Colors.ENDC}").strip()
+        try:
+            choice = input(f"\n{Colors.OKCYAN}Enter your choice (1 or 2): {Colors.ENDC}").strip()
+        except EOFError:
+            print_error("\nNo input received. Exiting.")
+            sys.exit(1)
         
         if choice == "1":
             success = setup_python()
