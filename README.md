@@ -24,6 +24,26 @@
 
 ## Setup
 
+### Quick Setup (Recommended)
+
+Use the interactive setup wizard to automatically install dependencies and configure ArchieAI:
+
+```bash
+python setup.py
+```
+
+The setup wizard will:
+- Check system requirements (Python, pip, Ollama)
+- Let you choose between Python and Rust implementations
+- Install all dependencies automatically
+- Create necessary data directories
+- Configure the `.env` file
+- Guide you through the setup process
+
+### Manual Setup
+
+If you prefer to set up manually:
+
 1. Install [Ollama](https://ollama.ai/) on your system
 2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
 3. Copy `.env.example` to `.env` and configure your model:
@@ -39,6 +59,7 @@
    ```bash
    mkdir -p data/sessions
    echo '{}' > data/qna.json
+   echo '{}' > data/users.json
    ```
 7. Run the application:
    ```bash
