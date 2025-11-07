@@ -77,7 +77,7 @@ def run_command(command, shell=False, capture_output=False):
     try:
         if capture_output:
             result = subprocess.run(
-                command if shell else command.split(),
+                command if isinstance(command, list) or shell else command.split(),
                 shell=shell,
                 capture_output=True,
                 text=True,
@@ -86,7 +86,7 @@ def run_command(command, shell=False, capture_output=False):
             return True, result.stdout.strip()
         else:
             result = subprocess.run(
-                command if shell else command.split(),
+                command if isinstance(command, list) or shell else command.split(),
                 shell=shell,
                 check=True
             )
@@ -264,8 +264,8 @@ def install_python_dependencies():
     # Determine pip command
     pip_cmd = "pip3" if check_command_exists("pip3") else "pip"
     
-    # Install dependencies
-    success, output = run_command(f"{pip_cmd} install -r requirements.txt")
+    # Install dependencies - use list for security
+    success, output = run_command([pip_cmd, "install", "-r", "requirements.txt"])
     
     if success:
         print_success("Python dependencies installed successfully")
@@ -338,7 +338,8 @@ def setup_rust():
     print_info("Building Rust project...")
     print_info("This may take a few minutes...")
     
-    success, output = run_command("cargo build --release")
+    # Use list for security
+    success, output = run_command(["cargo", "build", "--release"])
     
     if success:
         print_success("Rust project built successfully")
