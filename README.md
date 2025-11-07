@@ -120,6 +120,34 @@ All data is stored locally in JSON files:
 - `data/sessions/*.json` - Individual chat sessions
 - `data/qna.json` - Question-answer pairs (legacy storage)
 
+## Building Executable
+
+You can convert the setup wizard to a standalone executable using PyInstaller:
+
+### Install PyInstaller
+```bash
+pip install pyinstaller
+```
+
+### Build the Executable
+
+#### Windows
+```bash
+pyinstaller --onefile --name ArchieAI-Setup setup.py
+```
+
+#### Linux/macOS
+```bash
+pyinstaller --onefile --name ArchieAI-Setup setup.py
+```
+
+The executable will be created in the `dist/` directory and can be distributed to users who don't have Python installed.
+
+**Note:** The executable still requires users to have:
+- Python 3.8+ (for running the Python version of ArchieAI)
+- Cargo/Rust (for running the Rust version)
+- Ollama (for AI functionality)
+
 ## Development
 
 To run the web scraper manually:
