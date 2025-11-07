@@ -11,7 +11,20 @@ import sys
 import subprocess
 import platform
 import shutil
+import re
 from pathlib import Path
+
+
+# Constants
+AVAILABLE_MODELS = [
+    "llama2",
+    "llama3",
+    "qwen3",
+    "mistral",
+    "codellama"
+]
+DEFAULT_MODEL = "llama2"
+RUST_IMPLEMENTATION_STATUS = "experimental - not fully implemented"
 
 
 class Colors:
@@ -205,24 +218,27 @@ def setup_env_file():
             response = 'n'
         
         if response == 'y':
-            print_info("\nCommon models:")
-            print("  - llama2 (default)")
-            print("  - llama3")
-            print("  - qwen3 (recommended for tool calling)")
-            print("  - mistral")
-            print("  - codellama")
+            print_info("\nAvailable models:")
+            for model in AVAILABLE_MODELS:
+                if model == DEFAULT_MODEL:
+                    print(f"  - {model} (default)")
+                elif model == "qwen3":
+                    print(f"  - {model} (recommended for tool calling)")
+                else:
+                    print(f"  - {model}")
             
             try:
-                model = input(f"\n{Colors.OKCYAN}Enter model name (press Enter for llama2): {Colors.ENDC}").strip()
+                model = input(f"\n{Colors.OKCYAN}Enter model name (press Enter for {DEFAULT_MODEL}): {Colors.ENDC}").strip()
             except EOFError:
                 model = ''
             
             if model:
-                # Update MODEL in .env file
+                # Update MODEL in .env file using regex to be more robust
                 with open(env_file, 'r') as f:
                     content = f.read()
                 
-                content = content.replace('MODEL=llama2', f'MODEL={model}')
+                # Use regex to replace MODEL value, ensuring we match the entire line
+                content = re.sub(r'^MODEL=.*$', f'MODEL={model}', content, flags=re.MULTILINE)
                 
                 with open(env_file, 'w') as f:
                     f.write(content)
@@ -301,7 +317,7 @@ def setup_rust():
     """Setup Rust implementation"""
     print_header("Rust Setup")
     
-    print_warning("Note: Rust implementation is not fully implemented yet!")
+    print_warning(f"Note: Rust implementation is {RUST_IMPLEMENTATION_STATUS}!")
     
     # Check prerequisites
     if not check_cargo():
@@ -352,7 +368,7 @@ def main():
     # Choose implementation
     print(f"{Colors.OKCYAN}Choose implementation:{Colors.ENDC}")
     print("  1. Python (Flask web app)")
-    print("  2. Rust (experimental - not fully implemented)")
+    print(f"  2. Rust ({RUST_IMPLEMENTATION_STATUS})")
     
     while True:
         try:
