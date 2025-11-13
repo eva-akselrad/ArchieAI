@@ -1,3 +1,4 @@
+# ArchieAI Application Dependencies
 beautifulsoup4==4.14.2
 ollama==0.6.0
 python-dotenv==1.2.1
@@ -6,4 +7,13 @@ flask==3.1.2
 werkzeug==3.1.3
 qrcode==8.2
 pillow==12.0.0
-#TODO UPDATE DEPENDENCIY LIST
+
+# CS222 Final Project Dependencies (Data Science)
+pandas>=1.5.0
+numpy>=1.23.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+scikit-learn>=1.2.0
+jupyter>=1.0.0
+notebook>=6.5.0
+ipykernel>=6.20.0

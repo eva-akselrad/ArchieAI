@@ -107,3 +107,30 @@ python src/helpers/scraper.py
 ```
 
 The scraper runs in a loop and updates university data every hour.
+
+## CS222 Final Project
+
+This repository also includes a comprehensive data science project analyzing user interaction patterns with ArchieAI. The project was completed as the final project for CS222 (Data Science) course at Arcadia University, Fall 2025.
+
+### Project Overview
+- **Title:** Understanding Student Engagement Patterns with an AI Assistant
+- **Goal:** Analyze user session data to identify usage patterns and predict engagement levels
+- **Methods:** Exploratory Data Analysis (EDA) + Machine Learning (Classification)
+
+### Project Files
+- **Project Proposal:** `docs/project_proposal.md`
+- **Jupyter Notebook:** `notebooks/archieai_analysis.ipynb` (main analysis)
+- **Technical Report:** `docs/technical_report.md`
+- **Presentation Guide:** `docs/presentation_outline.md`
+- **Setup Instructions:** `project_README.md`
+
+### Quick Start for Project
+```bash
+# Install dependencies (if not already installed)
+pip install -r requirements.txt
+
+# Run the Jupyter notebook
+jupyter notebook notebooks/archieai_analysis.ipynb
+```
+
+For detailed instructions on running the data science project, see [`project_README.md`](project_README.md).
