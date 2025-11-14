@@ -15,7 +15,7 @@ The following Python modules have been converted to Rust:
 
 - `src/data_collector.rs` - Data collection and analytics logging
 - `src/session_manager.rs` - User account and session management
-- `src/gem_interface.rs` - AI interface for Ollama integration
+- `src/gem_interface.rs` - AI interface for Ollama integration with **actual API calls**
 - `src/lib.rs` - Library module exports
 - `src/main.rs` - Demo runner showing basic functionality
 
@@ -31,6 +31,41 @@ To run the demo:
 cargo run
 ```
 
+## Ollama Integration
+
+The `gem_interface.rs` module now includes **real Ollama API calls** using the `ollama-rs` crate:
+
+- **Streaming support** - Real-time token streaming from Ollama
+- **Chat messages** - Full conversation history support
+- **Async/await** - Fully asynchronous implementation with Tokio
+
+### Using the Ollama Interface
+
+```rust
+use archie_ai_rust::AiInterface;
+
+let ai = AiInterface::new(true, 3, 1.0, 15);
+
+// Non-streaming chat
+let response = ai.archie("What are the office hours?".to_string(), None).await?;
+
+// Streaming chat (returns Vec of content chunks)
+let chunks = ai.generate_text_streaming(
+    "Tell me about Arcadia".to_string(),
+    "You are a helpful assistant".to_string()
+).await?;
+```
+
+### Prerequisites for Actual API Calls
+
+1. Install Ollama: https://ollama.ai
+2. Start the Ollama service
+3. Pull a model: `ollama pull llama2` (or any other model)
+4. Set environment variables (optional):
+   - `MODEL` - Model name (default: llama2)
+   - `OLLAMA_HOST` - Ollama host URL (default: http://localhost)
+   - `OLLAMA_PORT` - Ollama port (default: 11434)
+
 ## Dependencies
 
 The Rust implementation uses:
@@ -41,6 +76,8 @@ The Rust implementation uses:
 - `sha2` & `hex` - Password hashing
 - `rand` - Random number generation
 - `dotenv` - Environment variable loading
+- **`ollama-rs`** - Ollama API client with streaming support
+- **`tokio-stream`** - Async stream utilities
 
 ## Comments
 

@@ -6,21 +6,32 @@
 
 use serde::{Deserialize, Serialize};
 use std::env;
-use reqwest::Client;
-use tokio::time::Duration;
+use ollama_rs::{
+    Ollama,
+    generation::chat::{request::ChatMessageRequest, ChatMessage},
+};
+use tokio_stream::StreamExt;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
     pub role: String,
     pub content: String,
 }
 
-#[derive(Debug)]
+impl Message {
+    fn to_chat_message(&self) -> ChatMessage {
+        match self.role.as_str() {
+            "system" => ChatMessage::system(self.content.clone()),
+            "assistant" => ChatMessage::assistant(self.content.clone()),
+            _ => ChatMessage::user(self.content.clone()),
+        }
+    }
+}
+
 pub struct AiInterface {
     model: String,
     debug: bool,
-    scraper_timeout: u64,
-    client: Client,
+    ollama_client: Ollama,
 }
 
 impl AiInterface {
@@ -33,7 +44,7 @@ impl AiInterface {
         debug: bool,
         _scraper_max_retries: u32,
         _scraper_backoff_factor: f32,
-        scraper_timeout: u64,
+        _scraper_timeout: u64,
     ) -> Self {
         // Load the variables from the .env file into the environment
         dotenv::dotenv().ok();
@@ -41,18 +52,19 @@ impl AiInterface {
         // Retrieve the model name from environment (defaults to llama2 if not set)
         let model = env::var("MODEL").unwrap_or_else(|_| "llama2".to_string());
         
-        // Create a reqwest client with headers and retry strategy
-        let client = Client::builder()
-            .timeout(Duration::from_secs(scraper_timeout))
-            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-            .build()
-            .expect("Failed to create HTTP client");
+        // Create Ollama client - defaults to localhost:11434
+        let host = env::var("OLLAMA_HOST").unwrap_or_else(|_| "http://localhost".to_string());
+        let port: u16 = env::var("OLLAMA_PORT")
+            .ok()
+            .and_then(|p| p.parse().ok())
+            .unwrap_or(11434);
+        
+        let ollama_client = Ollama::new(host, port);
         
         AiInterface {
             model,
             debug,
-            scraper_timeout,
-            client,
+            ollama_client,
         }
     }
     
@@ -67,26 +79,29 @@ impl AiInterface {
         &self,
         prompt: String,
         system_prompt: String,
-    ) -> Result<String, String> {
+    ) -> Result<Vec<String>, String> {
         self.log(&format!("Generating text for prompt: {}", prompt));
         
         let mut messages = Vec::new();
         
         if !system_prompt.is_empty() {
-            messages.push(Message {
-                role: "system".to_string(),
-                content: system_prompt,
-            });
+            messages.push(ChatMessage::system(system_prompt));
         }
         
-        messages.push(Message {
-            role: "user".to_string(),
-            content: prompt,
-        });
+        messages.push(ChatMessage::user(prompt));
         
-        // Placeholder for actual Ollama API call
-        // In a real implementation, this would make an async call to the Ollama API
-        Ok("Response from AI".to_string())
+        let request = ChatMessageRequest::new(self.model.clone(), messages);
+        
+        match self.ollama_client.send_chat_messages_stream(request).await {
+            Ok(mut stream) => {
+                let mut result = Vec::new();
+                while let Some(Ok(response)) = stream.next().await {
+                    result.push(response.message.content);
+                }
+                Ok(result)
+            }
+            Err(e) => Err(format!("Failed to generate text: {}", e)),
+        }
     }
     
     // I dont think this is used anywhere but im keeping it just in case
@@ -100,7 +115,10 @@ impl AiInterface {
         // Load scraped data from JSON file
         let scrape_results = match tokio::fs::read_to_string("data/scrape_results.json").await {
             Ok(content) => content,
-            Err(e) => return Err(format!("Failed to read scrape results: {}", e)),
+            Err(e) => {
+                self.log(&format!("Warning: Could not read scrape_results.json: {}", e));
+                "{}".to_string()
+            }
         };
         
         let mut messages = Vec::new();
@@ -119,49 +137,62 @@ If the university data doesn't contain the information needed, or if the query r
             scrape_results
         );
         
-        messages.push(Message {
-            role: "system".to_string(),
-            content: system_content,
-        });
+        messages.push(ChatMessage::system(system_content));
         
         // Add conversation history
         if let Some(history) = conversation_history {
             for msg in history.iter().rev().take(5).rev() {
-                messages.push(msg.clone());
+                messages.push(msg.to_chat_message());
             }
         }
         
         // Add current query
-        messages.push(Message {
-            role: "user".to_string(),
-            content: query,
-        });
+        messages.push(ChatMessage::user(query));
         
-        // Placeholder for actual Ollama API call
-        Ok("Response from Archie AI".to_string())
+        let request = ChatMessageRequest::new(self.model.clone(), messages);
+        
+        match self.ollama_client.send_chat_messages(request).await {
+            Ok(response) => {
+                Ok(response.message.content)
+            }
+            Err(e) => Err(format!("Failed to get response from Archie AI: {}", e)),
+        }
     }
     
     pub async fn async_web_search(
         &self,
         prompt: String,
-        _system_prompt: String,
+        system_prompt: String,
     ) -> Result<Vec<String>, String> {
         self.log(&format!("Web search for: {}", prompt));
         
+        // Check for OLLAMA_API_KEY or OLLAMA_TOKEN in environment
         let _ollama_api_key = env::var("OLLAMA_API_KEY")
             .or_else(|_| env::var("OLLAMA_TOKEN"))
-            .map_err(|_| "Error: OLLAMA_API_KEY (or OLLAMA_TOKEN) not found in environment".to_string())?;
+            .ok();
         
-        let _model = env::var("OLLAMA_MODEL")
-            .map_err(|_| "Error: OLLAMA_MODEL not found in environment".to_string())?;
+        let model = env::var("OLLAMA_MODEL").unwrap_or_else(|_| self.model.clone());
         
-        // Placeholder for actual web search implementation
-        // In a real implementation, this would use the Ollama API with web_search and web_fetch tools
-        let mut results = Vec::new();
-        results.push("Search result 1".to_string());
-        results.push("Search result 2".to_string());
+        let mut messages = Vec::new();
         
-        Ok(results)
+        if !system_prompt.is_empty() {
+            messages.push(ChatMessage::system(system_prompt));
+        }
+        
+        messages.push(ChatMessage::user(prompt));
+        
+        let request = ChatMessageRequest::new(model, messages);
+        
+        match self.ollama_client.send_chat_messages_stream(request).await {
+            Ok(mut stream) => {
+                let mut results = Vec::new();
+                while let Some(Ok(response)) = stream.next().await {
+                    results.push(response.message.content);
+                }
+                Ok(results)
+            }
+            Err(e) => Err(format!("Failed to perform web search: {}", e)),
+        }
     }
     
     pub async fn archie_streaming(
@@ -195,14 +226,5 @@ The Time is {}"#,
         );
         
         self.async_web_search(query, system_prompt).await
-    }
-}
-
-impl Clone for Message {
-    fn clone(&self) -> Self {
-        Message {
-            role: self.role.clone(),
-            content: self.content.clone(),
-        }
     }
 }

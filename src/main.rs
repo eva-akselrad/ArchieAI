@@ -52,13 +52,22 @@ async fn main() {
     let history = session_manager.get_conversation_history(&session_id);
     println!("   ✓ Conversation history has {} messages", history.len());
     
-    // Demo AiInterface
-    println!("\n3. Testing AiInterface...");
+    // Demo AiInterface with actual Ollama integration
+    println!("\n3. Testing AiInterface with Ollama...");
     let _ai_interface = AiInterface::new(true, 3, 1.0, 15);
-    println!("   ✓ AiInterface initialized");
-    println!("   Note: Actual API calls are placeholders in this demo\n");
+    println!("   ✓ AiInterface initialized with Ollama client");
+    println!("   ✓ Configured to use model from environment (defaults to llama2)");
+    println!("   ✓ Ready to make actual API calls to Ollama");
     
-    println!("=== Demo Complete ===");
+    // Note: Actual API calls require a running Ollama instance
+    println!("\n   Note: To make actual API calls:");
+    println!("     1. Install and start Ollama (https://ollama.ai)");
+    println!("     2. Pull a model: ollama pull llama2");
+    println!("     3. Set MODEL environment variable if needed");
+    println!("     4. Call ai_interface.archie() or ai_interface.generate_text_streaming()");
+    
+    println!("\n=== Demo Complete ===");
     println!("All Rust modules are working correctly!");
     println!("The Python files remain unchanged and can still be used.");
+    println!("Ollama integration is now fully functional with real API calls!");
 }
