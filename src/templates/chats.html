@@ -14,6 +14,102 @@
 
   <!-- Link to custom stylesheet -->
   <link rel="stylesheet" href="static/styles/style.css">
+  
+  <style>
+    /* Mobile responsiveness for chats page */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px 0 50px;
+      }
+      
+      .container :where(.app-header, .suggestions, .message, .prompt-wrapper, .disclaimer-text) {
+        padding: 0 12px;
+      }
+      
+      .app-header .heading {
+        font-size: 2rem;
+      }
+      
+      .app-header .subheading {
+        font-size: 1.8rem;
+      }
+      
+      .suggestions .suggestion-item {
+        width: 180px;
+        padding: 12px;
+      }
+      
+      .chats-container .message .message-text {
+        max-width: 85%;
+      }
+      
+      .prompt-form .prompt-actions {
+        gap: 4px;
+        margin-right: 4px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 12px 0 50px;
+      }
+      
+      .container :where(.app-header, .suggestions, .message, .prompt-wrapper, .disclaimer-text) {
+        padding: 0 8px;
+      }
+      
+      .app-header {
+        margin-top: 2vh;
+      }
+      
+      .app-header .heading {
+        font-size: 1.5rem;
+      }
+      
+      .app-header .subheading {
+        font-size: 1.3rem;
+        margin-top: -3px;
+      }
+      
+      .suggestions {
+        margin-top: 6vh;
+        gap: 10px;
+      }
+      
+      .suggestions .suggestion-item {
+        width: 140px;
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+      
+      .suggestions .suggestion-item span {
+        height: 36px;
+        width: 36px;
+        margin-top: 20px;
+      }
+      
+      .chats-container .message .message-text {
+        max-width: 90%;
+        padding: 8px 12px;
+      }
+      
+      .prompt-wrapper button {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+      }
+      
+      .prompt-form .prompt-actions button {
+        height: 40px;
+        width: 40px;
+      }
+      
+      .disclaimer-text {
+        font-size: 0.8rem;
+        padding: 12px 8px 0;
+      }
+    }
+  </style>
 </head>
 
 <body>
