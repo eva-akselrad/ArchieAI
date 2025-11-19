@@ -28,9 +28,9 @@ docker compose logs -f ollama       # Just Ollama
 ### Manage Models
 ```bash
 docker exec archie-ollama ollama list                    # List installed models
-docker exec archie-ollama ollama pull llama2             # Pull llama2
-docker exec archie-ollama ollama pull qwen3              # Pull qwen3 (better quality)
-docker exec archie-ollama ollama rm llama2               # Remove a model
+docker exec archie-ollama ollama pull qwen3:4b           # Pull default model
+docker exec archie-ollama ollama pull qwen3:235b         # Pull advanced model (larger)
+docker exec archie-ollama ollama rm qwen3:4b             # Remove a model
 ```
 
 ### Update Application
@@ -43,9 +43,9 @@ docker compose up -d --build
 
 Edit `.env` file:
 ```env
-MODEL=llama2                    # Change AI model
-OLLAMA_HOST=http://ollama       # Ollama host (leave as-is for Docker)
-OLLAMA_PORT=11434               # Ollama port
+MODEL=qwen3:4b                      # Change AI model (default: qwen3:4b, advanced: qwen3:235b)
+OLLAMA_HOST=http://ollama           # Ollama host (leave as-is for Docker)
+OLLAMA_PORT=11434                   # Ollama port
 ```
 
 ## 🐛 Troubleshooting
@@ -72,8 +72,8 @@ docker compose up -d --build    # Rebuild and start
 # Ensure model is installed
 docker exec archie-ollama ollama list
 
-# Pull the model
-docker exec archie-ollama ollama pull llama2
+# Pull the default model
+docker exec archie-ollama ollama pull qwen3:4b
 
 # Restart services
 docker compose restart
@@ -81,8 +81,9 @@ docker compose restart
 
 ## 📊 System Requirements
 
-- **Minimum:** 8GB RAM, 10GB disk space
-- **Recommended:** 16GB RAM, 20GB disk space
+- **Minimum (qwen3:4b):** 8GB RAM, 15GB disk space
+- **Recommended (qwen3:4b):** 16GB RAM, 20GB disk space
+- **Advanced (qwen3:235b):** 32GB+ RAM, 150GB+ disk space
 - **CPU:** Multi-core processor
 
 ## 🎯 Quick Tips

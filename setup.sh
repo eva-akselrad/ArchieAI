@@ -67,11 +67,11 @@ echo "⏳ Waiting for Ollama to be ready..."
 sleep 5
 
 # Check if we should pull a model
-read -p "📥 Do you want to pull the llama2 model now? (y/n) " -n 1 -r
+read -p "📥 Do you want to pull the qwen3:4b model now? (y/n) " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "📥 Pulling llama2 model (this may take a while)..."
-    docker exec archie-ollama ollama pull llama2
+    echo "📥 Pulling qwen3:4b model (this may take a while)..."
+    docker exec archie-ollama ollama pull qwen3:4b
     echo "✅ Model pulled successfully"
     echo ""
 fi

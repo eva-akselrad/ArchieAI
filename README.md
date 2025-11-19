@@ -74,9 +74,9 @@ docker compose up -d
 docker-compose up -d
 
 # 4. Pull an AI model (choose one)
-docker exec archie-ollama ollama pull llama2
-# OR for better quality (larger download):
-docker exec archie-ollama ollama pull qwen3
+docker exec archie-ollama ollama pull qwen3:4b
+# OR for advanced quality (much larger download, requires more RAM):
+docker exec archie-ollama ollama pull qwen3:235b
 
 # 5. Access the application
 open http://localhost:5000
@@ -115,7 +115,7 @@ docker exec archie-ollama ollama list
 ### Configuration
 
 Edit `.env` file to customize:
-- `MODEL`: Change AI model (default: `llama2`)
+- `MODEL`: Change AI model (default: `qwen3:4b`, advanced: `qwen3:235b`)
 - `OLLAMA_HOST`: Ollama server URL
 - `OLLAMA_PORT`: Ollama port (default: `11434`)
 
@@ -124,12 +124,12 @@ Edit `.env` file to customize:
 ### Running the Rust Version (Recommended)
 
 1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
+2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
 3. Copy `.env.example` to `.env` and configure your model:
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and set your preferred model (e.g., `MODEL=qwen3`)
+4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
 5. Build and run with Cargo:
    ```bash
    cargo run --release
@@ -139,12 +139,12 @@ Edit `.env` file to customize:
 ### Running the Python Version (Legacy)
 
 1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
+2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
 3. Copy `.env.example` to `.env` and configure your model:
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and set your preferred model (e.g., `MODEL=qwen3`)
+4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
 5. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
@@ -185,7 +185,7 @@ ArchieAI uses Ollama's tool calling feature to intelligently search the web when
 - The scraped university data doesn't contain the answer
 - The query requires current/real-time information
 - The AI determines additional information is needed
-- **Note:** Requires a model with tool calling support (e.g., qwen3)
+- **Note:** qwen3 models have excellent tool calling support
 
 #### Session Context
 - Each conversation maintains context within the session
@@ -270,8 +270,11 @@ sudo systemctl restart docker  # Linux
 
 **Ollama model not found:**
 ```bash
-# Pull a model
-docker exec archie-ollama ollama pull llama2
+# Pull the default model
+docker exec archie-ollama ollama pull qwen3:4b
+
+# OR pull the advanced model (requires more RAM)
+docker exec archie-ollama ollama pull qwen3:235b
 
 # Verify model is installed
 docker exec archie-ollama ollama list
