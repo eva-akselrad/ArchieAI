@@ -98,3 +98,206 @@ impl DataCollector {
         fs::write(&self.json_file, json_str).expect("Failed to write JSON file");
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn setup_test_dir(name: &str) -> String {
+        let test_dir = format!("/tmp/test_{}", name);
+        let _ = fs::remove_dir_all(&test_dir);
+        test_dir
+    }
+
+    fn cleanup_test_dir(dir: &str) {
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_data_collector_new() {
+        let test_dir = setup_test_dir("data_collector_new");
+        let collector = DataCollector::new(&test_dir);
+        
+        // Check that directory and JSON file are created
+        assert!(std::path::Path::new(&test_dir).exists());
+        assert!(collector.json_file.exists());
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_log_interaction() {
+        let test_dir = setup_test_dir("log_interaction");
+        let collector = DataCollector::new(&test_dir);
+        
+        collector.log_interaction(
+            "session123".to_string(),
+            Some("test@example.com".to_string()),
+            "127.0.0.1".to_string(),
+            "Mozilla/5.0".to_string(),
+            "What is Arcadia?".to_string(),
+            "Arcadia is a university.".to_string(),
+            1.234,
+        );
+        
+        // Read the JSON file
+        let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
+        let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
+        
+        assert_eq!(data.len(), 1);
+        assert_eq!(data[0].session_id, "session123");
+        assert_eq!(data[0].user_email, "test@example.com");
+        assert_eq!(data[0].question, "What is Arcadia?");
+        assert_eq!(data[0].answer, "Arcadia is a university.");
+        assert_eq!(data[0].question_length, 16);
+        assert_eq!(data[0].answer_length, 24);
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_log_multiple_interactions() {
+        let test_dir = setup_test_dir("log_multiple");
+        let collector = DataCollector::new(&test_dir);
+        
+        collector.log_interaction(
+            "session1".to_string(),
+            Some("user1@example.com".to_string()),
+            "127.0.0.1".to_string(),
+            "device1".to_string(),
+            "Question 1".to_string(),
+            "Answer 1".to_string(),
+            1.0,
+        );
+        
+        collector.log_interaction(
+            "session2".to_string(),
+            Some("user2@example.com".to_string()),
+            "127.0.0.2".to_string(),
+            "device2".to_string(),
+            "Question 2".to_string(),
+            "Answer 2".to_string(),
+            2.0,
+        );
+        
+        let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
+        let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
+        
+        assert_eq!(data.len(), 2);
+        assert_eq!(data[0].session_id, "session1");
+        assert_eq!(data[1].session_id, "session2");
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_log_interaction_guest_user() {
+        let test_dir = setup_test_dir("log_guest");
+        let collector = DataCollector::new(&test_dir);
+        
+        collector.log_interaction(
+            "session123".to_string(),
+            None, // No user email
+            "127.0.0.1".to_string(),
+            "device".to_string(),
+            "Question".to_string(),
+            "Answer".to_string(),
+            1.5,
+        );
+        
+        let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
+        let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
+        
+        assert_eq!(data.len(), 1);
+        assert_eq!(data[0].user_email, "guest"); // Should default to "guest"
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_generation_time_rounding() {
+        let test_dir = setup_test_dir("time_rounding");
+        let collector = DataCollector::new(&test_dir);
+        
+        collector.log_interaction(
+            "session".to_string(),
+            Some("test@example.com".to_string()),
+            "127.0.0.1".to_string(),
+            "device".to_string(),
+            "Question".to_string(),
+            "Answer".to_string(),
+            1.23456789, // Should be rounded to 2 decimal places
+        );
+        
+        let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
+        let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
+        
+        assert_eq!(data[0].generation_time_seconds, 1.23);
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_interaction_serialization() {
+        let interaction = Interaction {
+            timestamp: "2023-01-01T00:00:00Z".to_string(),
+            session_id: "test_session".to_string(),
+            user_email: "test@example.com".to_string(),
+            ip_address: "127.0.0.1".to_string(),
+            device_info: "test_device".to_string(),
+            question: "test question".to_string(),
+            question_length: 13,
+            answer: "test answer".to_string(),
+            answer_length: 11,
+            generation_time_seconds: 1.5,
+        };
+        
+        let json = serde_json::to_string(&interaction).expect("Failed to serialize");
+        assert!(json.contains("test_session"));
+        assert!(json.contains("test@example.com"));
+        
+        let deserialized: Interaction = serde_json::from_str(&json).expect("Failed to deserialize");
+        assert_eq!(deserialized.session_id, "test_session");
+    }
+
+    #[test]
+    fn test_persistence_across_instances() {
+        let test_dir = setup_test_dir("persistence");
+        
+        {
+            let collector1 = DataCollector::new(&test_dir);
+            collector1.log_interaction(
+                "session1".to_string(),
+                Some("test@example.com".to_string()),
+                "127.0.0.1".to_string(),
+                "device".to_string(),
+                "Question 1".to_string(),
+                "Answer 1".to_string(),
+                1.0,
+            );
+        }
+        
+        // Create a new instance and log another interaction
+        {
+            let collector2 = DataCollector::new(&test_dir);
+            collector2.log_interaction(
+                "session2".to_string(),
+                Some("test@example.com".to_string()),
+                "127.0.0.1".to_string(),
+                "device".to_string(),
+                "Question 2".to_string(),
+                "Answer 2".to_string(),
+                2.0,
+            );
+            
+            // Read and verify both interactions are present
+            let content = fs::read_to_string(&collector2.json_file).expect("Failed to read JSON file");
+            let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
+            
+            assert_eq!(data.len(), 2);
+        }
+        
+        cleanup_test_dir(&test_dir);
+    }
+}

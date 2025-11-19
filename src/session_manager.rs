@@ -358,3 +358,244 @@ mod base64 {
 
     pub const URL_SAFE_NO_PAD: u8 = 0;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn setup_test_dir(name: &str) -> String {
+        let test_dir = format!("/tmp/test_{}", name);
+        let _ = fs::remove_dir_all(&test_dir);
+        test_dir
+    }
+
+    fn cleanup_test_dir(dir: &str) {
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_session_manager_new() {
+        let test_dir = setup_test_dir("session_manager_new");
+        let manager = SessionManager::new(&test_dir);
+        
+        // Check that directories are created
+        assert!(std::path::Path::new(&test_dir).exists());
+        assert!(std::path::Path::new(&format!("{}/sessions", test_dir)).exists());
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_create_user() {
+        let test_dir = setup_test_dir("create_user");
+        let manager = SessionManager::new(&test_dir);
+        
+        let result = manager.create_user(
+            "test@example.com".to_string(),
+            "password123".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        assert!(result);
+        
+        // Try to create the same user again
+        let result2 = manager.create_user(
+            "test@example.com".to_string(),
+            "password456".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        assert!(!result2); // Should fail
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_authenticate_user() {
+        let test_dir = setup_test_dir("authenticate_user");
+        let manager = SessionManager::new(&test_dir);
+        
+        manager.create_user(
+            "test@example.com".to_string(),
+            "password123".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        // Correct password
+        assert!(manager.authenticate_user("test@example.com", "password123"));
+        
+        // Wrong password
+        assert!(!manager.authenticate_user("test@example.com", "wrongpassword"));
+        
+        // Non-existent user
+        assert!(!manager.authenticate_user("nonexistent@example.com", "password123"));
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_create_session() {
+        let test_dir = setup_test_dir("create_session");
+        let manager = SessionManager::new(&test_dir);
+        
+        let session_id = manager.create_session(Some("test@example.com".to_string()));
+        
+        assert!(!session_id.is_empty());
+        assert!(manager.get_session(&session_id).is_some());
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_add_message() {
+        let test_dir = setup_test_dir("add_message");
+        let manager = SessionManager::new(&test_dir);
+        
+        let session_id = manager.create_session(Some("test@example.com".to_string()));
+        
+        manager.add_message(&session_id, "user".to_string(), "Hello".to_string());
+        manager.add_message(&session_id, "assistant".to_string(), "Hi there!".to_string());
+        
+        let history = manager.get_conversation_history(&session_id);
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[0].role, "user");
+        assert_eq!(history[0].content, "Hello");
+        assert_eq!(history[1].role, "assistant");
+        assert_eq!(history[1].content, "Hi there!");
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_get_conversation_history_limit() {
+        let test_dir = setup_test_dir("conversation_history_limit");
+        let manager = SessionManager::new(&test_dir);
+        
+        let session_id = manager.create_session(Some("test@example.com".to_string()));
+        
+        // Add more than 10 messages
+        for i in 0..15 {
+            manager.add_message(&session_id, "user".to_string(), format!("Message {}", i));
+        }
+        
+        let history = manager.get_conversation_history(&session_id);
+        assert_eq!(history.len(), 10); // Should only return last 10
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_delete_session() {
+        let test_dir = setup_test_dir("delete_session");
+        let manager = SessionManager::new(&test_dir);
+        
+        manager.create_user(
+            "test@example.com".to_string(),
+            "password123".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        let session_id = manager.create_session(Some("test@example.com".to_string()));
+        
+        assert!(manager.get_session(&session_id).is_some());
+        
+        let success = manager.delete_session(&session_id, Some("test@example.com".to_string()));
+        assert!(success);
+        assert!(manager.get_session(&session_id).is_none());
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_get_user_sessions() {
+        let test_dir = setup_test_dir("get_user_sessions");
+        let manager = SessionManager::new(&test_dir);
+        
+        manager.create_user(
+            "test@example.com".to_string(),
+            "password123".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        let session1 = manager.create_session(Some("test@example.com".to_string()));
+        let session2 = manager.create_session(Some("test@example.com".to_string()));
+        
+        let sessions = manager.get_user_sessions("test@example.com");
+        assert_eq!(sessions.len(), 2);
+        assert!(sessions.contains(&session1));
+        assert!(sessions.contains(&session2));
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_get_all_user_sessions_with_preview() {
+        let test_dir = setup_test_dir("sessions_with_preview");
+        let manager = SessionManager::new(&test_dir);
+        
+        manager.create_user(
+            "test@example.com".to_string(),
+            "password123".to_string(),
+            "127.0.0.1".to_string(),
+            "test device".to_string(),
+        );
+        
+        let session_id = manager.create_session(Some("test@example.com".to_string()));
+        manager.add_message(&session_id, "user".to_string(), "What is Arcadia?".to_string());
+        manager.add_message(&session_id, "assistant".to_string(), "Arcadia is a university.".to_string());
+        
+        let previews = manager.get_all_user_sessions_with_preview("test@example.com");
+        assert_eq!(previews.len(), 1);
+        assert_eq!(previews[0].preview, "What is Arcadia?");
+        assert_eq!(previews[0].message_count, 2);
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_is_valid_session_id() {
+        let test_dir = setup_test_dir("valid_session_id");
+        let _manager = SessionManager::new(&test_dir);
+        
+        let manager = SessionManager::new(&test_dir);
+        assert!(manager.is_valid_session_id("abc123"));
+        assert!(manager.is_valid_session_id("test-session_123"));
+        assert!(!manager.is_valid_session_id("invalid/session"));
+        assert!(!manager.is_valid_session_id("a".repeat(65).as_str())); // Too long
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_password_hashing() {
+        let test_dir = setup_test_dir("password_hashing");
+        let manager = SessionManager::new(&test_dir);
+        
+        let hash1 = manager.generate_password_hash("password123");
+        let hash2 = manager.generate_password_hash("password123");
+        
+        // Same password should produce same hash
+        assert_eq!(hash1, hash2);
+        
+        // Different passwords should produce different hashes
+        let hash3 = manager.generate_password_hash("differentpassword");
+        assert_ne!(hash1, hash3);
+        
+        cleanup_test_dir(&test_dir);
+    }
+
+    #[test]
+    fn test_base64_encoding() {
+        let input = b"Hello, World!";
+        let encoded = base64::encode_config(input, base64::URL_SAFE_NO_PAD);
+        
+        assert!(!encoded.is_empty());
+        assert!(encoded.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_'));
+    }
+}
