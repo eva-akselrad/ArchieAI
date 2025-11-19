@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+target/
+*.exe
+*.pdb
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.ipynb_checkpoints/
+
+# Data and logs
+data/
+*.log
+error.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs and media
+*.md
+!README.md
+*.mov
+*.mp4
+
+# Environment
+.env
+
+# Other
+sample_qr.png
+DataManip.py
+requirements.txt

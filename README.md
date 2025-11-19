@@ -9,6 +9,7 @@
 </p>
 
 ## Features
+- **🐳 Docker Support:** One-command setup with Docker and Docker Compose
 - **Natural Language Understanding:** Communicates in a human-like manner.  
 - **Contextual Awareness:** Remembers previous interactions for better responses.  
 - **Streaming Responses:** See the AI "thinking" in real-time with token-by-token streaming.
@@ -21,6 +22,96 @@
 - **Account System:** User authentication with password hashing for secure login.
 - **Chat History:** View, load, and delete previous conversations.
 - **Web Scraping:** Automated scraping of Arcadia University resources for up-to-date information.  
+
+## Quick Start with Docker (Easiest Method) 🐳
+
+The fastest way to get ArchieAI running is with Docker. This method automatically sets up everything including Ollama.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) installed
+- [Docker Compose](https://docs.docker.com/compose/install/) installed
+
+### One-Command Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/eva-akselrad/ArchieAI.git
+cd ArchieAI
+
+# Run the setup script
+./setup.sh
+```
+
+That's it! The script will:
+- ✅ Check Docker installation
+- ✅ Create configuration files
+- ✅ Build the application
+- ✅ Start all services
+- ✅ Optionally pull the AI model
+
+**Access ArchieAI at:** `http://localhost:5000`
+
+### Manual Docker Setup
+
+If you prefer manual control:
+
+```bash
+# 1. Create environment file
+cp .env.example .env
+
+# 2. Create data directory
+mkdir -p data/sessions
+
+# 3. Start services (use 'docker compose' or 'docker-compose' based on your version)
+docker compose up -d
+# OR
+docker-compose up -d
+
+# 4. Pull an AI model (choose one)
+docker exec archie-ollama ollama pull llama2
+# OR for better quality (larger download):
+docker exec archie-ollama ollama pull qwen3
+
+# 5. Access the application
+open http://localhost:5000
+```
+
+### Docker Management Commands
+
+```bash
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose stop
+
+# Start services
+docker compose start
+
+# Restart services
+docker compose restart
+
+# Stop and remove containers
+docker compose down
+
+# Rebuild after code changes
+docker compose up -d --build
+
+# Pull a different model
+docker exec archie-ollama ollama pull <model-name>
+
+# List available models
+docker exec archie-ollama ollama list
+```
+
+**Note:** If you have an older Docker installation, replace `docker compose` with `docker-compose` in all commands.
+
+### Configuration
+
+Edit `.env` file to customize:
+- `MODEL`: Change AI model (default: `llama2`)
+- `OLLAMA_HOST`: Ollama server URL
+- `OLLAMA_PORT`: Ollama port (default: `11434`)
 
 ## Setup
 
@@ -155,3 +246,76 @@ python src/helpers/scraper.py
 ```
 
 The scraper runs in a loop and updates university data every hour.
+
+## Troubleshooting
+
+### Docker Issues
+
+**Services won't start:**
+```bash
+# Check if ports are available
+sudo lsof -i :5000
+sudo lsof -i :11434
+
+# Restart Docker
+sudo systemctl restart docker  # Linux
+# OR restart Docker Desktop on Mac/Windows
+```
+
+**Ollama model not found:**
+```bash
+# Pull a model
+docker exec archie-ollama ollama pull llama2
+
+# Verify model is installed
+docker exec archie-ollama ollama list
+```
+
+**Permission denied errors:**
+```bash
+# Fix data directory permissions
+sudo chown -R $USER:$USER data/
+chmod -R 755 data/
+```
+
+**Container keeps restarting:**
+```bash
+# Check logs
+docker-compose logs archie-ai
+docker-compose logs ollama
+
+# Rebuild containers
+docker-compose down
+docker-compose up -d --build
+```
+
+### Application Issues
+
+**"Failed to load home page" error:**
+- Ensure templates exist in `src/templates/`
+- Check file permissions
+- Verify Docker volume mounts
+
+**AI not responding:**
+- Ensure Ollama is running: `docker ps`
+- Check model is pulled: `docker exec archie-ollama ollama list`
+- Verify `.env` has correct `MODEL` name
+
+**Session not persisting:**
+- Check `data/` directory exists and is writable
+- Verify Docker volume mount in `docker-compose.yml`
+
+## System Requirements
+
+- **RAM:** Minimum 8GB (16GB recommended for larger models)
+- **Storage:** 10GB+ free space (models can be large)
+- **CPU:** Multi-core processor recommended
+- **OS:** Linux, macOS, or Windows with Docker support
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is for educational purposes at Arcadia University.
