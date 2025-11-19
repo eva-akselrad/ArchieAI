@@ -113,10 +113,10 @@ async fn main() {
         .route("/api/archie/stream", post(api_archie_stream))
         .route("/api/sessions/history", get(get_session_history))
         .route("/api/sessions/list", get(list_user_sessions))
-        .route("/api/sessions/:session_id", get(get_session_details))
-        .route("/api/sessions/:session_id", delete(delete_session_handler))
+        .route("/api/sessions/{session_id}", get(get_session_details))
+        .route("/api/sessions/{session_id}", delete(delete_session_handler))
         .route("/api/sessions/new", post(create_new_session))
-        .route("/api/sessions/switch/:session_id", post(switch_session))
+        .route("/api/sessions/switch/{session_id}", post(switch_session))
         .route("/chats", get(chats_get).post(chats_post))
         .nest_service("/static", ServeDir::new("src/static"))
         .with_state(state);
