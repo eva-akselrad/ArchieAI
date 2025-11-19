@@ -5,9 +5,9 @@
 // - GemInterface: For AI interface with Ollama
 
 pub mod data_collector;
-pub mod session_manager;
 pub mod gem_interface;
+pub mod session_manager;
 
 pub use data_collector::DataCollector;
-pub use session_manager::SessionManager;
 pub use gem_interface::AiInterface;
+pub use session_manager::SessionManager;

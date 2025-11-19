@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2025-11-15T03:29:45.867480300+00:00",
+    "session_id": "demo_session_123",
+    "user_email": "test@arcadia.edu",
+    "ip_address": "127.0.0.1",
+    "device_info": "Mozilla/5.0 Test Browser",
+    "question": "What is the tuition for 2025?",
+    "question_length": 29,
+    "answer": "The tuition for 2025 is $45,000 per year.",
+    "answer_length": 41,
+    "generation_time_seconds": 1.23
+  },
+  {
+    "timestamp": "2025-11-15T03:33:32.961772+00:00",
+    "session_id": "demo_session_123",
+    "user_email": "test@arcadia.edu",
+    "ip_address": "127.0.0.1",
+    "device_info": "Mozilla/5.0 Test Browser",
+    "question": "What is the tuition for 2025?",
+    "question_length": 29,
+    "answer": "The tuition for 2025 is $45,000 per year.",
+    "answer_length": 41,
+    "generation_time_seconds": 1.23
+  },
+  {
+    "timestamp": "2025-11-15T03:38:42.782366700+00:00",
+    "session_id": "demo_session_123",
+    "user_email": "test@arcadia.edu",
+    "ip_address": "127.0.0.1",
+    "device_info": "Mozilla/5.0 Test Browser",
+    "question": "What is the tuition for 2025?",
+    "question_length": 29,
+    "answer": "The tuition for 2025 is $45,000 per year.",
+    "answer_length": 41,
+    "generation_time_seconds": 1.23
+  }
+]
