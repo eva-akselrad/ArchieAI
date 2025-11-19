@@ -8,6 +8,12 @@
   Archie AI is an AI-powered assistant designed to help users and students with a variety of tasks, from answering questions to providing recommendations and generating content. Built on Ollama for local LLM inference, ArchieAI aims to enhance productivity and make your experience at Arcadia University more efficient and enjoyable.
 </p>
 
+---
+
+**📖 [Quick Start Guide](QUICK_START.md)** | **🐳 Docker Setup Below** | **💬 [Report Issues](https://github.com/eva-akselrad/ArchieAI/issues)**
+
+---
+
 ## Features
 - **🐳 Docker Support:** One-command setup with Docker and Docker Compose
 - **Natural Language Understanding:** Communicates in a human-like manner.  
