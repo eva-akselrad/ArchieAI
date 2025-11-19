@@ -143,7 +143,7 @@ async fn home(headers: HeaderMap) -> Response {
         Redirect::to("/index").into_response()
     } else {
         // No session, show login page
-        match tokio::fs::read_to_string("home.html").await {
+        match tokio::fs::read_to_string("src/templates/home.html").await {
             Ok(content) => Html(content).into_response(),
             Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to load home page Error {e}")).into_response(),
         }
