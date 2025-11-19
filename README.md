@@ -24,6 +24,23 @@
 
 ## Setup
 
+### Running the Rust Version (Recommended)
+
+1. Install [Ollama](https://ollama.ai/) on your system
+2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
+3. Copy `.env.example` to `.env` and configure your model:
+   ```bash
+   cp .env.example .env
+   ```
+4. Edit `.env` and set your preferred model (e.g., `MODEL=qwen3`)
+5. Build and run with Cargo:
+   ```bash
+   cargo run --release
+   ```
+6. Access the web interface at `http://localhost:5000`
+
+### Running the Python Version (Legacy)
+
 1. Install [Ollama](https://ollama.ai/) on your system
 2. Pull a model that supports tool calling: `ollama pull qwen3` (recommended for tool calling support)
 3. Copy `.env.example` to `.env` and configure your model:
@@ -100,6 +117,37 @@ All data is stored locally in JSON files:
 - `data/qna.json` - Question-answer pairs (legacy storage)
 
 ## Development
+
+### Running Tests
+
+The Rust implementation includes comprehensive test coverage with 44 tests:
+- **main.rs**: 9 tests covering route handlers, cookies, request/response types
+- **session_manager.rs**: 14 tests covering user authentication, session management, password hashing
+- **data_collector.rs**: 8 tests covering analytics logging and data persistence
+- **gem_interface.rs**: 13 tests covering AI interface and message handling
+
+```bash
+# Run all tests
+cargo test
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run specific test
+cargo test test_name
+```
+
+### Building for Production
+
+```bash
+# Build optimized release binary
+cargo build --release
+
+# Binary will be in target/release/archie-ai-rust
+./target/release/archie-ai-rust
+```
+
+### Python Web Scraper
 
 To run the web scraper manually:
 ```bash
