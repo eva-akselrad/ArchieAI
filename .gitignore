@@ -1,32 +1,21 @@
-# Python cache files
+# Python cache files (for qrCodeGen.py utility)
 __pycache__/
 *.py[cod]
+src/lib/__pycache__/
 
 # Environment files
 .env
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Virtual environment directories
-venv/
-env/
 
 # IDE and editor files
 *.vscode/
 .idea/
 *.swp
 
-# Added by cargo
-
+# Cargo/Rust
 /target
+Cargo.lock
+
+# Data and logs
 data/scrape_results.json
 /data
 error.txt
-
-
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target

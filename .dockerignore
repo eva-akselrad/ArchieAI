@@ -7,16 +7,6 @@ target/
 *.exe
 *.pdb
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-.ipynb_checkpoints/
-
 # Data and logs
 data/
 *.log
@@ -41,7 +31,10 @@ Thumbs.db
 # Environment
 .env
 
-# Other
+# Other Python files (keep qrCodeGen.py)
+src/lib/__pycache__/
+*.pyc
+__pycache__/
+
+# Legacy files
 sample_qr.png
-DataManip.py
-requirements.txt

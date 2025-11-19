@@ -121,7 +121,7 @@ Edit `.env` file to customize:
 
 ## Setup
 
-### Running the Rust Version (Recommended)
+### Running the Rust Version
 
 1. Install [Ollama](https://ollama.ai/) on your system
 2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
@@ -135,30 +135,6 @@ Edit `.env` file to customize:
    cargo run --release
    ```
 6. Access the web interface at `http://localhost:5000`
-
-### Running the Python Version (Legacy)
-
-1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
-3. Copy `.env.example` to `.env` and configure your model:
-   ```bash
-   cp .env.example .env
-   ```
-4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
-5. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-6. Initialize data directories:
-   ```bash
-   mkdir -p data/sessions
-   echo '{}' > data/qna.json
-   ```
-7. Run the application:
-   ```bash
-   python src/app.py
-   ```
-8. Access the web interface at `http://localhost:5000`
 
 ## Usage
 
@@ -243,15 +219,6 @@ cargo build --release
 # Binary will be in target/release/archie-ai-rust
 ./target/release/archie-ai-rust
 ```
-
-### Python Web Scraper
-
-To run the web scraper manually:
-```bash
-python src/helpers/scraper.py
-```
-
-The scraper runs in a loop and updates university data every hour.
 
 ## Troubleshooting
 
