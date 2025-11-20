@@ -10,12 +10,11 @@
 
 ---
 
-**📖 [Quick Start Guide](QUICK_START.md)** | **🐳 Docker Setup Below** | **💬 [Report Issues](https://github.com/eva-akselrad/ArchieAI/issues)**
+**📖 [Quick Start Guide](QUICK_START.md)** | **💬 [Report Issues](https://github.com/eva-akselrad/ArchieAI/issues)**
 
 ---
 
 ## Features
-- **🐳 Docker Support:** One-command setup with Docker and Docker Compose
 - **Natural Language Understanding:** Communicates in a human-like manner.  
 - **Contextual Awareness:** Remembers previous interactions for better responses.  
 - **Streaming Responses:** See the AI "thinking" in real-time with token-by-token streaming.
@@ -29,105 +28,15 @@
 - **Chat History:** View, load, and delete previous conversations.
 - **Web Scraping:** Automated scraping of Arcadia University resources for up-to-date information.  
 
-## Quick Start with Docker (Easiest Method) 🐳
+## Quick Start
 
-The fastest way to get ArchieAI running is with Docker. This method automatically sets up everything including Ollama.
+The fastest way to get ArchieAI running is with the native Rust setup.
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) installed
-- [Docker Compose](https://docs.docker.com/compose/install/) installed
+- [Ollama](https://ollama.ai/) installed on your system
+- [Rust](https://rustup.rs/) installed (for building the application)
 
-### One-Command Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/eva-akselrad/ArchieAI.git
-cd ArchieAI
-
-# Create environment file
-cp .env.example .env
-
-# Create data directory
-mkdir -p data/sessions
-
-# Start services with Docker Compose
-docker compose up -d
-
-# Pull the AI model (choose one)
-docker exec archie-ollama ollama pull qwen3:4b
-```
-
-That's it! The commands will:
-- ✅ Create configuration files
-- ✅ Create data directories
-- ✅ Build the application
-- ✅ Start all services
-- ✅ Pull the AI model
-
-**Access ArchieAI at:** `http://localhost:5000`
-### Manual Docker Setup
-
-If you prefer step-by-step control:
-
-```bash
-# 1. Create environment file
-cp .env.example .env
-
-# 2. Create data directory
-mkdir -p data/sessions
-
-# 3. Start services
-docker compose up -d
-
-# 4. Pull an AI model (choose one)
-docker exec archie-ollama ollama pull qwen3:4b
-# OR for advanced quality (much larger download, requires more RAM):
-docker exec archie-ollama ollama pull qwen3:235b
-
-# 5. Access the application
-open http://localhost:5000
-```
-
-### Docker Management Commands
-
-```bash
-# View logs
-docker compose logs -f
-
-# Stop services
-docker compose stop
-
-# Start services
-docker compose start
-
-# Restart services
-docker compose restart
-
-# Stop and remove containers
-docker compose down
-
-# Rebuild after code changes
-docker compose up -d --build
-
-# Pull a different model
-docker exec archie-ollama ollama pull <model-name>
-
-# List available models
-docker exec archie-ollama ollama list
-```
-
-**Note:** Modern Docker installations use `docker compose` (with a space). If you have an older installation, you may need to use `docker-compose` (with a hyphen) instead.
-# end Archie section
-### Configuration
-
-Edit `.env` file to customize:
-- `MODEL`: Change AI model (default: `qwen3:4b`, advanced: `qwen3:235b`)
-- `OLLAMA_HOST`: Ollama server URL
-- `OLLAMA_PORT`: Ollama port (default: `11434`)
-
-## Setup
-
-### Running the Rust Version
+### Setup Steps
 
 1. Install [Ollama](https://ollama.ai/) on your system
 2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
@@ -136,11 +45,24 @@ Edit `.env` file to customize:
    cp .env.example .env
    ```
 4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
-5. Build and run with Cargo:
+5. Create data directory:
+   ```bash
+   mkdir -p data/sessions
+   ```
+6. Build and run with Cargo:
    ```bash
    cargo run --release
    ```
-6. Access the web interface at `http://localhost:5000`
+7. Access the web interface at `http://localhost:5000`
+
+### Configuration
+
+Edit `.env` file to customize:
+- `MODEL`: Change AI model (default: `qwen3:4b`, advanced: `qwen3:235b`)
+- `OLLAMA_HOST`: Ollama server URL (default: `http://localhost`)
+- `OLLAMA_PORT`: Ollama port (default: `11434`)
+
+## Setup
 
 ## Usage
 
@@ -228,71 +150,69 @@ cargo build --release
 
 ## Troubleshooting
 
-### Docker Issues
+### Application Issues
 
-**Services won't start:**
+**Port already in use:**
 ```bash
 # Check if ports are available
 sudo lsof -i :5000
 sudo lsof -i :11434
 
-# Restart Docker
-sudo systemctl restart docker  # Linux
-# OR restart Docker Desktop on Mac/Windows
+# Stop the process using the port or change the port in the application
+```
+
+**Ollama not running:**
+```bash
+# Start Ollama service
+ollama serve
+
+# Or check if it's already running
+curl http://localhost:11434/api/tags
 ```
 
 **Ollama model not found:**
 ```bash
 # Pull the default model
-docker exec archie-ollama ollama pull qwen3:4b
+ollama pull qwen3:4b
 
 # OR pull the advanced model (requires more RAM)
-docker exec archie-ollama ollama pull qwen3:235b
+ollama pull qwen3:235b
 
 # Verify model is installed
-docker exec archie-ollama ollama list
+ollama list
 ```
-
-**Permission denied errors:**
-```bash
-# Fix data directory permissions
-sudo chown -R $USER:$USER data/
-chmod -R 755 data/
-```
-
-**Container keeps restarting:**
-```bash
-# Check logs
-docker-compose logs archie-ai
-docker-compose logs ollama
-
-# Rebuild containers
-docker-compose down
-docker-compose up -d --build
-```
-
-### Application Issues
 
 **"Failed to load home page" error:**
 - Ensure templates exist in `src/templates/`
 - Check file permissions
-- Verify Docker volume mounts
+- Verify the application was built successfully
 
 **AI not responding:**
-- Ensure Ollama is running: `docker ps`
-- Check model is pulled: `docker exec archie-ollama ollama list`
+- Ensure Ollama is running: `curl http://localhost:11434/api/tags`
+- Check model is pulled: `ollama list`
 - Verify `.env` has correct `MODEL` name
+- Check that OLLAMA_HOST and OLLAMA_PORT are correct in `.env`
 
 **Session not persisting:**
 - Check `data/` directory exists and is writable
-- Verify Docker volume mount in `docker-compose.yml`
+- Ensure you have write permissions: `chmod -R 755 data/`
+
+**Build errors:**
+```bash
+# Update Rust toolchain
+rustup update
+
+# Clean and rebuild
+cargo clean
+cargo build --release
+```
 
 ## System Requirements
 
 - **RAM:** Minimum 8GB (16GB recommended for larger models)
 - **Storage:** 10GB+ free space (models can be large)
 - **CPU:** Multi-core processor recommended
-- **OS:** Linux, macOS, or Windows with Docker support
+- **OS:** Linux, macOS, or Windows with Rust support
 
 ## Contributing
 

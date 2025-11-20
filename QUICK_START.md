@@ -1,56 +1,63 @@
 # ArchieAI Quick Start Guide
 
-## 🚀 Fastest Setup (Docker)
+## 🚀 Fastest Setup
+
+### Prerequisites
+- [Ollama](https://ollama.ai/) installed on your system
+- [Rust](https://rustup.rs/) installed (for building the application)
+
+### Setup Steps
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/eva-akselrad/ArchieAI.git
 cd ArchieAI
 
-# Create environment file
+# 2. Install and start Ollama (if not already installed)
+# Visit https://ollama.ai/ for installation instructions
+
+# 3. Pull the AI model
+ollama pull qwen3:4b
+
+# 4. Create environment file
 cp .env.example .env
 
-# Create data directory
+# 5. Create data directory
 mkdir -p data/sessions
 
-# Start services with Docker Compose
-docker compose up -d
-
-# Pull the AI model
-docker exec archie-ollama ollama pull qwen3:4b
+# 6. Build and run the application
+cargo run --release
 ```
 
 Then open: http://localhost:5000
 
 ## 📋 Common Commands
 
-### Start/Stop
+### Development
 ```bash
-docker compose up -d        # Start in background
-docker compose stop         # Stop services
-docker compose restart      # Restart services
-docker compose down         # Stop and remove containers
+cargo run                    # Run in debug mode
+cargo run --release         # Run optimized release build
+cargo build --release       # Build without running
+cargo test                  # Run tests
 ```
 
-### View Logs
+### Ollama Management
 ```bash
-docker compose logs -f              # All services
-docker compose logs -f archie-ai    # Just ArchieAI
-docker compose logs -f ollama       # Just Ollama
+ollama list                 # List installed models
+ollama pull qwen3:4b        # Pull default model
+ollama pull qwen3:235b      # Pull advanced model (larger)
+ollama rm qwen3:4b          # Remove a model
+ollama serve                # Start Ollama service (if not running)
 ```
 
-### Manage Models
+### Application Management
 ```bash
-docker exec archie-ollama ollama list                    # List installed models
-docker exec archie-ollama ollama pull qwen3:4b           # Pull default model
-docker exec archie-ollama ollama pull qwen3:235b         # Pull advanced model (larger)
-docker exec archie-ollama ollama rm qwen3:4b             # Remove a model
-```
+# Stop the application: Press Ctrl+C in the terminal where it's running
 
-### Update Application
-```bash
+# Update application
 git pull
-docker compose up -d --build
+cargo build --release
+cargo run --release
 ```
 
 ## 🔧 Configuration
@@ -58,7 +65,7 @@ docker compose up -d --build
 Edit `.env` file:
 ```env
 MODEL=qwen3:4b                      # Change AI model (default: qwen3:4b, advanced: qwen3:235b)
-OLLAMA_HOST=http://ollama           # Ollama host (leave as-is for Docker)
+OLLAMA_HOST=http://localhost        # Ollama host
 OLLAMA_PORT=11434                   # Ollama port
 ```
 
@@ -69,70 +76,90 @@ OLLAMA_PORT=11434                   # Ollama port
 # Check what's using port 5000
 sudo lsof -i :5000
 
-# Or change port in docker-compose.yml:
-# ports:
-#   - "8080:5000"  # Use port 8080 instead
+# If another process is using it, stop it or change the port in the Rust application
 ```
 
-### Container Won't Start
+### Ollama Not Running
 ```bash
-docker compose logs archie-ai   # Check logs
-docker compose down             # Clean up
-docker compose up -d --build    # Rebuild and start
+# Check if Ollama is running
+ollama list
+
+# If not running, start it
+ollama serve
+
+# Or on macOS/Linux, Ollama runs as a service after installation
 ```
 
 ### Model Not Responding
 ```bash
 # Ensure model is installed
-docker exec archie-ollama ollama list
+ollama list
 
-# Pull the default model
-docker exec archie-ollama ollama pull qwen3:4b
+# Pull the default model if missing
+ollama pull qwen3:4b
 
-# Restart services
-docker compose restart
+# Verify Ollama is accessible
+curl http://localhost:11434/api/tags
+```
+
+### Build Issues
+```bash
+# Update Rust toolchain
+rustup update
+
+# Clean build
+cargo clean
+cargo build --release
 ```
 
 ## 📊 System Requirements
 
-- **Minimum (qwen3:4b):** 8GB RAM, 15GB disk space
-- **Recommended (qwen3:4b):** 16GB RAM, 20GB disk space
+- **Minimum (qwen3:4b):** 8GB RAM, 10GB disk space
+- **Recommended (qwen3:4b):** 16GB RAM, 15GB disk space
 - **Advanced (qwen3:235b):** 32GB+ RAM, 150GB+ disk space
-- **CPU:** Multi-core processor
+- **CPU:** Multi-core processor recommended
+- **OS:** Linux, macOS, or Windows with Rust support
 
 ## 🎯 Quick Tips
 
-1. **First time setup:** Follow the commands above - no script needed!
-2. **Change models:** Update `MODEL` in `.env` and pull the new model
+1. **First time setup:** Follow the commands above to get started
+2. **Change models:** Update `MODEL` in `.env`, pull the new model with `ollama pull`, and restart the app
 3. **Persistent data:** All chats saved in `./data/` directory
-4. **View all commands:** `docker compose --help`
-5. **Check status:** `docker compose ps`
+4. **Check Ollama status:** Run `ollama list` to see installed models
+5. **Performance:** Use `cargo run --release` for better performance
 
 ## 🔗 Useful Links
 
 - Main app: http://localhost:5000
 - Ollama API: http://localhost:11434
-- Documentation: See README.md
+- Ollama Documentation: https://ollama.ai/
+- Rust Documentation: https://doc.rust-lang.org/
+- Full Documentation: See README.md
 
 ## ⚡ Advanced
 
-### Build Only
+### Run Tests
 ```bash
-docker compose build
+cargo test
+cargo test -- --nocapture  # Show test output
 ```
 
-### Run in Foreground (see logs immediately)
+### Build Optimized Binary
 ```bash
-docker compose up
+cargo build --release
+./target/release/archie-ai-rust
 ```
 
-### Clean Everything (⚠️ deletes data)
+### Clean Build Artifacts
 ```bash
-docker compose down -v
-rm -rf data/
+cargo clean
 ```
 
-### Check Resource Usage
+### Development Mode with Auto-Reload
 ```bash
-docker stats
+# Install cargo-watch
+cargo install cargo-watch
+
+# Run with auto-reload
+cargo watch -x run
 ```
