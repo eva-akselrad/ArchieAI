@@ -29,57 +29,82 @@
 - **Chat History:** View, load, and delete previous conversations.
 - **Web Scraping:** Automated scraping of Arcadia University resources for up-to-date information.  
 
-## Quick Start with Docker (Easiest Method) 🐳
+## Quick Start with Docker 🐳
 
 The fastest way to get ArchieAI running is with Docker. This method automatically sets up everything including Ollama.
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) installed
-- [Docker Compose](https://docs.docker.com/compose/install/) installed
+- [Docker Desktop](https://docs.docker.com/get-docker/) installed and **running**
+  - **Windows users:** Make sure Docker Desktop is started before running commands
+  - **Linux users:** Ensure Docker service is running: `sudo systemctl start docker`
 
-### One-Command Setup
+### Docker Setup (No Scripts Required)
 
+**Step 1: Clone and Configure**
 ```bash
 # Clone the repository
 git clone https://github.com/eva-akselrad/ArchieAI.git
 cd ArchieAI
 
-# Run the setup script
-./setup.sh
+# Create environment file (copy and customize if needed)
+cp .env.example .env
 ```
 
-That's it! The script will:
-- ✅ Check Docker installation
-- ✅ Create configuration files
-- ✅ Build the application
-- ✅ Start all services
-- ✅ Optionally pull the AI model
+**Windows PowerShell:**
+```powershell
+Copy-Item .env.example .env
+```
 
-**Access ArchieAI at:** `http://localhost:5000`
+**Step 2: Create Data Directory**
+```bash
+mkdir -p data/sessions
+```
 
-### Manual Docker Setup
+**Windows PowerShell:**
+```powershell
+New-Item -ItemType Directory -Force -Path data/sessions
+```
 
-If you prefer manual control:
+**Step 3: Start Services**
+```bash
+docker compose up -d
+```
+
+**Windows PowerShell:**
+```powershell
+docker compose up -d
+```
+
+**Step 4: Pull AI Model**
+
+Wait for services to start (about 30 seconds), then pull a model:
 
 ```bash
-# 1. Create environment file
-cp .env.example .env
-
-# 2. Create data directory
-mkdir -p data/sessions
-
-# 3. Start services (use 'docker compose' or 'docker-compose' based on your version)
-docker compose up -d
-# OR
-docker-compose up -d
-
-# 4. Pull an AI model (choose one)
+# Default model (recommended)
 docker exec archie-ollama ollama pull qwen3:4b
-# OR for advanced quality (much larger download, requires more RAM):
-docker exec archie-ollama ollama pull qwen3:235b
 
-# 5. Access the application
-open http://localhost:5000
+# OR advanced model (requires 32GB+ RAM)
+docker exec archie-ollama ollama pull qwen3:235b
+```
+
+**Step 5: Access the Application**
+
+Open your browser to: **http://localhost:5000**
+
+### Troubleshooting Docker Desktop on Windows
+
+If you get "cannot find the file specified" or similar errors:
+
+1. **Ensure Docker Desktop is running** - Check the system tray for the Docker icon
+2. **Restart Docker Desktop** - Right-click the icon and select "Restart"
+3. **Wait for Docker to fully start** - The icon should show "Docker Desktop is running"
+4. **Try again** - Run `docker compose up -d`
+
+If issues persist:
+```powershell
+# Clean and rebuild
+docker compose down
+docker compose up -d --build
 ```
 
 ### Docker Management Commands
@@ -111,6 +136,16 @@ docker exec archie-ollama ollama list
 ```
 
 **Note:** If you have an older Docker installation, replace `docker compose` with `docker-compose` in all commands.
+
+### Optional: Automated Setup Script
+
+For Linux/Mac users, there's an optional setup script that automates all the steps:
+
+```bash
+./setup.sh
+```
+
+This script is **not required** - the manual Docker steps above work on all platforms including Windows.
 
 ### Configuration
 

@@ -1,12 +1,39 @@
 # ArchieAI Quick Start Guide
 
-## 🚀 Fastest Setup (Docker)
+## 🚀 Docker Setup (Cross-Platform)
+
+### Prerequisites
+- Docker Desktop installed and **running**
+
+### Quick Start
 
 ```bash
-./setup.sh
+# 1. Clone repository
+git clone https://github.com/eva-akselrad/ArchieAI.git
+cd ArchieAI
+
+# 2. Copy environment file
+cp .env.example .env
+
+# 3. Create data directory
+mkdir -p data/sessions
+
+# 4. Start services
+docker compose up -d
+
+# 5. Pull AI model (wait ~30 seconds after step 4)
+docker exec archie-ollama ollama pull qwen3:4b
 ```
 
-Then open: http://localhost:5000
+**Windows PowerShell Alternative:**
+```powershell
+Copy-Item .env.example .env
+New-Item -ItemType Directory -Force -Path data/sessions
+docker compose up -d
+docker exec archie-ollama ollama pull qwen3:4b
+```
+
+Then open: **http://localhost:5000**
 
 ## 📋 Common Commands
 
@@ -49,6 +76,19 @@ OLLAMA_PORT=11434                   # Ollama port
 ```
 
 ## 🐛 Troubleshooting
+
+### Windows: "cannot find the file specified"
+
+If you see errors about pipe/dockerDesktopLinuxEngine:
+
+1. **Check Docker Desktop is running** - Look for Docker icon in system tray
+2. **Restart Docker Desktop** - Right-click icon → "Restart"
+3. **Wait for full startup** - Icon should show "Docker Desktop is running"
+4. **Clean rebuild:**
+   ```powershell
+   docker compose down
+   docker compose up -d --build
+   ```
 
 ### Port Already in Use
 ```bash
