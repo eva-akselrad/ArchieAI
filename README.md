@@ -44,22 +44,30 @@ The fastest way to get ArchieAI running is with Docker. This method automaticall
 git clone https://github.com/eva-akselrad/ArchieAI.git
 cd ArchieAI
 
-# Run the setup script
-./setup.sh
+# Create environment file
+cp .env.example .env
+
+# Create data directory
+mkdir -p data/sessions
+
+# Start services with Docker Compose
+docker compose up -d
+
+# Pull the AI model (choose one)
+docker exec archie-ollama ollama pull qwen3:4b
 ```
 
-That's it! The script will:
-- ✅ Check Docker installation
+That's it! The commands will:
 - ✅ Create configuration files
+- ✅ Create data directories
 - ✅ Build the application
 - ✅ Start all services
-- ✅ Optionally pull the AI model
+- ✅ Pull the AI model
 
 **Access ArchieAI at:** `http://localhost:5000`
-# The following section was done by Archie as a test of its abilities and may be wrong. I cant be bothered to check so good luck
 ### Manual Docker Setup
 
-If you prefer manual control:
+If you prefer step-by-step control:
 
 ```bash
 # 1. Create environment file
@@ -68,10 +76,8 @@ cp .env.example .env
 # 2. Create data directory
 mkdir -p data/sessions
 
-# 3. Start services (use 'docker compose' or 'docker-compose' based on your version)
+# 3. Start services
 docker compose up -d
-# OR
-docker-compose up -d
 
 # 4. Pull an AI model (choose one)
 docker exec archie-ollama ollama pull qwen3:4b
@@ -110,7 +116,7 @@ docker exec archie-ollama ollama pull <model-name>
 docker exec archie-ollama ollama list
 ```
 
-**Note:** If you have an older Docker installation, replace `docker compose` with `docker-compose` in all commands.
+**Note:** Modern Docker installations use `docker compose` (with a space). If you have an older installation, you may need to use `docker-compose` (with a hyphen) instead.
 # end Archie section
 ### Configuration
 
