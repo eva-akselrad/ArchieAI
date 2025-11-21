@@ -21,6 +21,7 @@ ENV/
 *.swo
 
 # Environment files
+# Note: .env is excluded from build but mounted as volume at runtime
 .env
 
 # Data directory (will be mounted as volume)
