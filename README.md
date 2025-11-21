@@ -127,7 +127,7 @@ docker exec archie-ollama ollama list
 ```
 
 **Note:** Modern Docker installations use `docker compose` (with a space). If you have an older installation, you may need to use `docker-compose` (with a hyphen) instead.
-# end Archie section
+
 ### Configuration
 
 Edit `.env` file to customize:
@@ -279,12 +279,12 @@ chmod -R 755 data/
 #### *The infinite loop of sadness*
 ```bash
 # Check logs
-docker-compose logs archie-ai
-docker-compose logs ollama
+docker compose logs archie-ai
+docker compose logs ollama
 
 # Rebuild containers
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose up -d --build
 ```
 
 ### Application Issues

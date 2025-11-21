@@ -46,7 +46,7 @@ docker compose logs -f ollama       # Just Ollama
 
 ### Manage Models
 ```bash
-    docker exec archie-ollama ollama list                    # List installed models
+docker exec archie-ollama ollama list                    # List installed models
 docker exec archie-ollama ollama pull qwen3:4b           # Pull default model
 docker exec archie-ollama ollama pull qwen3:235b         # Pull advanced model (larger)
 docker exec archie-ollama ollama rm qwen3:4b             # Remove a model
