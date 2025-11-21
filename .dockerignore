@@ -1,0 +1,38 @@
+# Git files
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+.env
+
+# Data directory (will be mounted as volume)
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+target/
+error.txt
+
+# Documentation
+README.md
+sample_qr.png
