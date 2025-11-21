@@ -1,5 +1,5 @@
 # ArchieAI Quick Start Guide (May not work correctly docker is being strange)
-
+## *aka "How to Spend Your Afternoon Downloading Things"*
 ## 🚀 Fastest Setup (Docker)
 
 ```bash
@@ -63,8 +63,9 @@ OLLAMA_PORT=11434                   # Ollama port
 ```
 
 ## 🐛 Troubleshooting
-
+### *aka "Things Will Definitely Go Wrong"*
 ### Port Already in Use
+#### *Because of course it is*
 ```bash
 # Check what's using port 5000
 sudo lsof -i :5000
@@ -82,6 +83,7 @@ docker compose up -d --build    # Rebuild and start
 ```
 
 ### Model Not Responding
+#### *AI has unionized and gone on strike*
 ```bash
 # Ensure model is installed
 docker exec archie-ollama ollama list
@@ -94,11 +96,16 @@ docker compose restart
 ```
 
 ## 📊 System Requirements
+### *aka "Things you probably should have checked BEFORE starting" And what I should have put at the top of this file*
 
 - **Minimum (qwen3:4b):** 8GB RAM, 15GB disk space
+-   - *Translation: It'll run, but your computer might cry a little*
 - **Recommended (qwen3:4b):** 16GB RAM, 20GB disk space
+-   - *Translation: Now we're talking! Your computer will only wheeze slightly*
 - **Advanced (qwen3:235b):** 32GB+ RAM, 150GB+ disk space
+-   - *Translation: You basically need a small data center. Hope you have deep pockets!*
 - **CPU:** Multi-core processor
+-   - *If you're still rocking a single core from 2005, I have some bad news for you...*
 
 ## 🎯 Quick Tips
 
