@@ -1,7 +1,8 @@
 // Simple runner for ArchieAI Rust modules
 // Demonstrates the basic functionality of DataCollector, SessionManager, and AiInterface
 // For the record, I hate Rust with a burning passion but here we are
-
+//This code will have warnings and such because its just a demo file to test the modules. ignore them it is not used anymore 
+// if you want to see it in action look at the video i submitted
 use archie_ai_rust::{AiInterface, DataCollector, SessionManager};
 
 #[tokio::main]

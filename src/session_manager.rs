@@ -1,6 +1,5 @@
 // Session and user management for ArchieAI.
 // Handles user accounts, session storage, and chat history.
-#![allow(dead_code)]//for dev purposes TODO remove later
 
 use chrono::Utc;
 use rand::Rng;
@@ -44,7 +43,6 @@ pub struct SessionPreview {
 }
 
 pub struct SessionManager {
-    data_dir: PathBuf,
     users_file: PathBuf,
     sessions_dir: PathBuf,
 }
@@ -68,7 +66,6 @@ impl SessionManager {
         }
 
         SessionManager {
-            data_dir,
             users_file,
             sessions_dir,
         }

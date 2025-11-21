@@ -1,5 +1,4 @@
 // AI Interface using Ollama for local LLM inference with streaming support.
-#![allow(dead_code)]//for dev purposes TODO remove later
 use ollama_rs::{
     generation::chat::{request::ChatMessageRequest, ChatMessage},
     Ollama,
@@ -15,7 +14,8 @@ pub struct Message {
 }
 
 impl Message {
-    fn to_chat_message(&self) -> ChatMessage {
+    //This is only used in tests 
+    fn _to_chat_message(&self) -> ChatMessage {
         match self.role.as_str() {
             "system" => ChatMessage::system(self.content.clone()),
             "assistant" => ChatMessage::assistant(self.content.clone()),
@@ -38,9 +38,7 @@ impl AiInterface {
     ///   let result = ai.archie("When is fall break?").await;
     pub fn new(
         debug: bool,
-        _scraper_max_retries: u32,
-        _scraper_backoff_factor: f32,
-        _scraper_timeout: u64,
+
     ) -> Self {
         // Load the variables from the .env file into the environment
         dotenv::dotenv().ok();
@@ -151,13 +149,13 @@ mod tests {
 
     #[test]
     fn test_ai_interface_new() {
-        let ai = AiInterface::new(false, 3, 1.0, 15);
+        let ai = AiInterface::new(false);
         assert!(!ai.debug);
     }
 
     #[test]
     fn test_ai_interface_new_debug() {
-        let ai = AiInterface::new(true, 3, 1.0, 15);
+        let ai = AiInterface::new(true);
         assert!(ai.debug);
     }
 
@@ -179,7 +177,7 @@ mod tests {
             content: "Hello".to_string(),
         };
         
-        let _chat_msg = msg.to_chat_message();
+        let _chat_msg = msg._to_chat_message();
         // Just verify it doesn't panic
         assert!(true);
     }
@@ -191,7 +189,7 @@ mod tests {
             content: "Hi there".to_string(),
         };
         
-        let _chat_msg = msg.to_chat_message();
+        let _chat_msg = msg._to_chat_message();
         assert!(true);
     }
 
@@ -202,7 +200,7 @@ mod tests {
             content: "System prompt".to_string(),
         };
         
-        let _chat_msg = msg.to_chat_message();
+        let _chat_msg = msg._to_chat_message();
         assert!(true);
     }
 
@@ -241,21 +239,21 @@ mod tests {
 
     #[test]
     fn test_log_function_debug_mode() {
-        let ai = AiInterface::new(true, 3, 1.0, 15);
+        let ai = AiInterface::new(true);
         // This should not panic
         ai.log("Test debug message");
     }
 
     #[test]
     fn test_log_function_no_debug() {
-        let ai = AiInterface::new(false, 3, 1.0, 15);
+        let ai = AiInterface::new(false);
         // This should not panic or output anything
         ai.log("This should not be printed");
     }
 
     #[tokio::test]
     async fn test_archie_streaming_with_empty_history() {
-        let ai = AiInterface::new(false, 3, 1.0, 15);
+        let ai = AiInterface::new(false);
         // This test will fail without Ollama running, but we can test the structure
         // In a real environment, you'd mock the Ollama client
         let result = ai.archie_streaming(
@@ -269,7 +267,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_archie_streaming_with_history() {
-        let ai = AiInterface::new(false, 3, 1.0, 15);
+        let ai = AiInterface::new(false);
         
         let history = vec![
             Message {
@@ -293,7 +291,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_async_web_search_structure() {
-        let ai = AiInterface::new(false, 3, 1.0, 15);
+        let ai = AiInterface::new(false);
         
         let result = ai.async_web_search(
             "Test query".to_string(),
@@ -313,7 +311,7 @@ mod tests {
         ];
         
         for msg in messages {
-            let _ = msg.to_chat_message();
+            let _ = msg._to_chat_message();
         }
         
         assert!(true);

@@ -1,4 +1,4 @@
-# ArchieAI Quick Start Guide
+# ArchieAI Quick Start Guide (May not work correctly docker is being strange)
 
 ## 🚀 Fastest Setup (Docker)
 
