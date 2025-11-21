@@ -15,29 +15,36 @@
 ---
 
 ## Features
-- **🐳 Docker Support:** One-command setup with Docker and Docker Compose
-- **Natural Language Understanding:** Communicates in a human-like manner.  
-- **Contextual Awareness:** Remembers previous interactions for better responses.  
-- **Streaming Responses:** See the AI "thinking" in real-time with token-by-token streaming.
-- **Local LLM Inference:** Uses Ollama for privacy-focused, local AI processing.
-- **Multi-Tasking:** Handles a wide range of tasks including writing, research, and data analysis.  
-- **Customizable:** Tailor responses and functionalities to suit individual needs.  
-- **Integration:** Easily integrates with various platforms and applications.
-- **Tool-Based Web Search:** Uses Ollama's tool calling to intelligently search the web when needed.
-- **Session Management:** Persistent chat history with support for multiple sessions per user.
-- **Account System:** User authentication with password hashing for secure login.
-- **Chat History:** View, load, and delete previous conversations.
-- **Web Scraping:** Automated scraping of Arcadia University resources for up-to-date information.  
+### *Look at all the cool stuff this thing can do!*
+- **🐳 Docker Support:** One-command setup with Docker and Docker Compose *(technically 5 commands but we're marketing here)*
+- **Natural Language Understanding:** Communicates in a human-like manner *(sometimes even better than actual humans)*
+- **Contextual Awareness:** Remembers previous interactions for better responses *(unlike your goldfish)*
+- **Streaming Responses:** See the AI "thinking" in real-time with token-by-token streaming *(watching paint dry has never been so exciting)*
+- **Local LLM Inference:** Uses Ollama for privacy-focused, local AI processing *(no cloud snooping, just good old localhost)*
+- **Multi-Tasking:** Handles a wide range of tasks including writing, research, and data analysis *(it's basically your new best friend)*
+- **Customizable:** Tailor responses and functionalities to suit individual needs *(make it YOUR AI)*
+- **Integration:** Easily integrates with various platforms and applications *(plays well with others)*
+- **Tool-Based Web Search:** Uses Ollama's tool calling to intelligently search the web when needed *(smarter than just Googling everything)*
+- **Session Management:** Persistent chat history with support for multiple sessions per user *(remembers all your conversations, for better or worse)*
+- **Account System:** User authentication with password hashing for secure login *(we actually hash passwords, unlike some places...)*
+- **Chat History:** View, load, and delete previous conversations *(delete those embarrassing questions you asked at 3am)*
+- **Web Scraping:** Automated scraping of Arcadia University resources for up-to-date information *(because manually checking websites is so 2010)*  
 
 ## Quick Start with Docker (Easiest Method) 🐳
+### *"Easiest" is relative - but this IS the least painful way*
 
 The fastest way to get ArchieAI running is with Docker. This method automatically sets up everything including Ollama.
+*By "fastest" we mean it'll take about as long as watching a Lord of the Rings movie. Extended edition.*
 
 ### Prerequisites
+#### *Things you should already have (but probably don't)*
 - [Docker](https://docs.docker.com/get-docker/) installed
+  - *If you don't have this yet, buckle up - this is going to take a while*
 - [Docker Compose](https://docs.docker.com/compose/install/) installed
+  - *Usually comes with Docker, but who knows what you've got going on*
 
 ### One-Command Setup
+#### *Technically five commands, but who's counting?*
 
 ```bash
 # Clone the repository
@@ -53,21 +60,21 @@ mkdir -p data/sessions
 # Start services with Docker Compose
 docker compose up -d
 
-# Pull the AI model (this may take several minutes depending on your connection)
+# Pull the AI model (choose one)
+# This is where you get to experience the thrill of watching a progress bar for 10+ minutes
 docker exec archie-ollama ollama pull qwen3:4b
 ```
 
-**Note:** The model download is approximately 2.5GB and may take 5-15 minutes depending on your internet connection.
-
 That's it! The commands will:
-- ✅ Create configuration files
-- ✅ Create data directories
-- ✅ Build the application
-- ✅ Start all services
-- ✅ Pull the AI model
+- ✅ Create configuration files *(copying one file, very impressive)*
+- ✅ Create data directories *(mkdir has entered the chat)*
+- ✅ Build the application *(Docker does all the work while you watch)*
+- ✅ Start all services *(containers go brrrrr)*
+- ✅ Pull the AI model *(grab a snack, you'll be here a while)*
 
 **Access ArchieAI at:** `http://localhost:5000`
 ### Manual Docker Setup
+#### *For control freaks and people who don't trust automation*
 
 If you prefer step-by-step control:
 
@@ -82,10 +89,10 @@ mkdir -p data/sessions
 docker compose up -d
 
 # 4. Pull an AI model (choose one)
-# Default model (qwen3:4b - ~2.5GB download, 5-15 minutes)
 docker exec archie-ollama ollama pull qwen3:4b
-# OR for advanced quality (qwen3:235b - much larger download, requires 32GB+ RAM):
+# OR for advanced quality (WARNING: This is REALLY big. Like, "hope you're on fiber internet" big):
 docker exec archie-ollama ollama pull qwen3:235b
+# ^^^ Seriously, this one needs 32GB+ RAM and 150GB disk. Your laptop will cry. You've been warned.
 
 # 5. Access the application
 open http://localhost:5000
@@ -120,7 +127,7 @@ docker exec archie-ollama ollama list
 ```
 
 **Note:** Modern Docker installations use `docker compose` (with a space). If you have an older installation, you may need to use `docker-compose` (with a hyphen) instead.
-
+# end Archie section
 ### Configuration
 
 Edit `.env` file to customize:
@@ -130,32 +137,16 @@ Edit `.env` file to customize:
 
 ## Setup
 
-### Running Locally (Without Docker)
-
-For development or if you prefer not to use Docker:
+### Running the Rust Version
 
 1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull the AI model (this may take several minutes):
-   ```bash
-   ollama pull qwen3:4b
-   # OR for advanced quality (requires more RAM):
-   ollama pull qwen3:235b
-   ```
+2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
 3. Copy `.env.example` to `.env` and configure your model:
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and update the configuration:
-   ```env
-   OLLAMA_HOST=http://localhost
-   OLLAMA_PORT=11434
-   MODEL=qwen3:4b
-   ```
-5. Create the data directory:
-   ```bash
-   mkdir -p data/sessions
-   ```
-6. Build and run with Cargo:
+4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
+5. Build and run with Cargo:
    ```bash
    cargo run --release
    ```
@@ -246,10 +237,13 @@ cargo build --release
 ```
 
 ## Troubleshooting
+### *When Things Inevitably Break (And They Will)*
 
 ### Docker Issues
+#### *Docker: It works on my machine™*
 
 **Services won't start:**
+#### *The classic "why isn't this working" moment*
 ```bash
 # Check if ports are available
 sudo lsof -i :5000
@@ -261,6 +255,7 @@ sudo systemctl restart docker  # Linux
 ```
 
 **Ollama model not found:**
+#### *Did you forget to download the brain? Classic rookie mistake*
 ```bash
 # Pull the default model
 docker exec archie-ollama ollama pull qwen3:4b
@@ -273,6 +268,7 @@ docker exec archie-ollama ollama list
 ```
 
 **Permission denied errors:**
+#### *Linux be like: "Who are you and why do you think you can touch that file?"*
 ```bash
 # Fix data directory permissions
 sudo chown -R $USER:$USER data/
@@ -280,38 +276,48 @@ chmod -R 755 data/
 ```
 
 **Container keeps restarting:**
+#### *The infinite loop of sadness*
 ```bash
 # Check logs
-docker compose logs archie-ai
-docker compose logs ollama
+docker-compose logs archie-ai
+docker-compose logs ollama
 
 # Rebuild containers
-docker compose down
-docker compose up -d --build
+docker-compose down
+docker-compose up -d --build
 ```
 
 ### Application Issues
+#### *Because the Docker issues weren't enough*
 
 **"Failed to load home page" error:**
+#### *The app is being dramatic*
 - Ensure templates exist in `src/templates/`
 - Check file permissions
 - Verify Docker volume mounts
 
 **AI not responding:**
+#### *Skynet has gone on coffee break*
 - Ensure Ollama is running: `docker ps`
 - Check model is pulled: `docker exec archie-ollama ollama list`
 - Verify `.env` has correct `MODEL` name
 
 **Session not persisting:**
+#### *Your conversations are vanishing into the void*
 - Check `data/` directory exists and is writable
 - Verify Docker volume mount in `docker-compose.yml`
 
 ## System Requirements
+### *Hope your computer can handle it!*
 
 - **RAM:** Minimum 8GB (16GB recommended for larger models)
+  - *Translation: 8GB will technically work, but your computer will sound like a jet engine*
 - **Storage:** 10GB+ free space (models can be large)
+  - *"Large" is putting it mildly. The big models will eat your hard drive for breakfast*
 - **CPU:** Multi-core processor recommended
+  - *Single core from 2007? Yeah, that's not gonna work, buddy*
 - **OS:** Linux, macOS, or Windows with Docker support
+  - *If you're on a smart fridge, you're on your own*
 
 ## Contributing
 

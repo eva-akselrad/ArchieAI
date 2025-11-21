@@ -1,16 +1,8 @@
-# ArchieAI Quick Start Guide
-
-This guide will help you get ArchieAI running on your machine in just a few minutes using Docker.
-
-## 📋 Prerequisites
-
-Before starting, ensure you have:
-- [Docker](https://docs.docker.com/get-docker/) installed (version 20.10 or later)
-- [Docker Compose](https://docs.docker.com/compose/install/) installed (comes with Docker Desktop)
-- At least 8GB of RAM available
-- At least 15GB of free disk space
+# ArchieAI Quick Start Guide (May not work correctly docker is being strange) 🎪
+## *aka "How to Spend Your Afternoon Downloading Things"*
 
 ## 🚀 Fastest Setup (Docker)
+### *Spoiler alert: It's not actually fast, but it IS easy*
 
 ```bash
 # Clone the repository
@@ -26,12 +18,13 @@ mkdir -p data/sessions
 # Start services with Docker Compose
 docker compose up -d
 
-# Pull the AI model (this may take several minutes depending on your connection)
+# Pull the AI model
 docker exec archie-ollama ollama pull qwen3:4b
 ```
-
-**Note:** The model download is approximately 2.5GB and may take 5-15 minutes depending on your internet connection.
-
+# ⚠️ WARNING THIS TAKES LIKE 30 YEARS TO DO SO BE PREPARED ⚠️
+# Just kidding! It's only ~2.5GB... but it FEELS like 30 years.
+# Time to make coffee ☕, walk the dog 🐕, contemplate life's meaning 🤔
+# Pro tip: This is a great time to read the rest of the documentation (that you'll ignore anyway)
 Then open: http://localhost:5000
 
 ## 📋 Common Commands
@@ -53,7 +46,7 @@ docker compose logs -f ollama       # Just Ollama
 
 ### Manage Models
 ```bash
-docker exec archie-ollama ollama list                    # List installed models
+    docker exec archie-ollama ollama list                    # List installed models
 docker exec archie-ollama ollama pull qwen3:4b           # Pull default model
 docker exec archie-ollama ollama pull qwen3:235b         # Pull advanced model (larger)
 docker exec archie-ollama ollama rm qwen3:4b             # Remove a model
@@ -75,8 +68,10 @@ OLLAMA_PORT=11434                   # Ollama port
 ```
 
 ## 🐛 Troubleshooting
+### *aka "Things Will Definitely Go Wrong"*
 
 ### Port Already in Use
+#### *Because of course it is*
 ```bash
 # Check what's using port 5000
 sudo lsof -i :5000
@@ -87,6 +82,7 @@ sudo lsof -i :5000
 ```
 
 ### Container Won't Start
+#### *Classic Docker moment*
 ```bash
 docker compose logs archie-ai   # Check logs
 docker compose down             # Clean up
@@ -94,6 +90,7 @@ docker compose up -d --build    # Rebuild and start
 ```
 
 ### Model Not Responding
+#### *AI has unionized and gone on strike*
 ```bash
 # Ensure model is installed
 docker exec archie-ollama ollama list
@@ -106,11 +103,16 @@ docker compose restart
 ```
 
 ## 📊 System Requirements
+### *aka "Things you probably should have checked BEFORE starting"*
 
 - **Minimum (qwen3:4b):** 8GB RAM, 15GB disk space
+  - *Translation: It'll run, but your computer might cry a little*
 - **Recommended (qwen3:4b):** 16GB RAM, 20GB disk space
+  - *Translation: Now we're talking! Your computer will only wheeze slightly*
 - **Advanced (qwen3:235b):** 32GB+ RAM, 150GB+ disk space
+  - *Translation: You basically need a small data center. Hope you have deep pockets!*
 - **CPU:** Multi-core processor
+  - *If you're still rocking a single core from 2005, I have some bad news for you...*
 
 ## 🎯 Quick Tips
 
@@ -139,6 +141,7 @@ docker compose up
 ```
 
 ### Clean Everything (⚠️ deletes data)
+#### *The nuclear option - use when you want to start fresh or just feel destructive*
 ```bash
 docker compose down -v
 rm -rf data/
