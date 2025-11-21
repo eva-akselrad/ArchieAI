@@ -53,9 +53,11 @@ mkdir -p data/sessions
 # Start services with Docker Compose
 docker compose up -d
 
-# Pull the AI model (choose one)
+# Pull the AI model (this may take several minutes depending on your connection)
 docker exec archie-ollama ollama pull qwen3:4b
 ```
+
+**Note:** The model download is approximately 2.5GB and may take 5-15 minutes depending on your internet connection.
 
 That's it! The commands will:
 - ✅ Create configuration files
@@ -80,8 +82,9 @@ mkdir -p data/sessions
 docker compose up -d
 
 # 4. Pull an AI model (choose one)
+# Default model (qwen3:4b - ~2.5GB download, 5-15 minutes)
 docker exec archie-ollama ollama pull qwen3:4b
-# OR for advanced quality (much larger download, requires more RAM):
+# OR for advanced quality (qwen3:235b - much larger download, requires 32GB+ RAM):
 docker exec archie-ollama ollama pull qwen3:235b
 
 # 5. Access the application
@@ -117,7 +120,7 @@ docker exec archie-ollama ollama list
 ```
 
 **Note:** Modern Docker installations use `docker compose` (with a space). If you have an older installation, you may need to use `docker-compose` (with a hyphen) instead.
-# end Archie section
+
 ### Configuration
 
 Edit `.env` file to customize:
@@ -127,16 +130,32 @@ Edit `.env` file to customize:
 
 ## Setup
 
-### Running the Rust Version
+### Running Locally (Without Docker)
+
+For development or if you prefer not to use Docker:
 
 1. Install [Ollama](https://ollama.ai/) on your system
-2. Pull the AI model: `ollama pull qwen3:4b` (or `qwen3:235b` for advanced quality)
+2. Pull the AI model (this may take several minutes):
+   ```bash
+   ollama pull qwen3:4b
+   # OR for advanced quality (requires more RAM):
+   ollama pull qwen3:235b
+   ```
 3. Copy `.env.example` to `.env` and configure your model:
    ```bash
    cp .env.example .env
    ```
-4. Edit `.env` and set your preferred model (default is `MODEL=qwen3:4b`)
-5. Build and run with Cargo:
+4. Edit `.env` and update the configuration:
+   ```env
+   OLLAMA_HOST=http://localhost
+   OLLAMA_PORT=11434
+   MODEL=qwen3:4b
+   ```
+5. Create the data directory:
+   ```bash
+   mkdir -p data/sessions
+   ```
+6. Build and run with Cargo:
    ```bash
    cargo run --release
    ```
@@ -263,12 +282,12 @@ chmod -R 755 data/
 **Container keeps restarting:**
 ```bash
 # Check logs
-docker-compose logs archie-ai
-docker-compose logs ollama
+docker compose logs archie-ai
+docker compose logs ollama
 
 # Rebuild containers
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose up -d --build
 ```
 
 ### Application Issues

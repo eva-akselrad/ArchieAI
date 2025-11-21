@@ -1,4 +1,14 @@
-# ArchieAI Quick Start Guide (May not work correctly docker is being strange)
+# ArchieAI Quick Start Guide
+
+This guide will help you get ArchieAI running on your machine in just a few minutes using Docker.
+
+## 📋 Prerequisites
+
+Before starting, ensure you have:
+- [Docker](https://docs.docker.com/get-docker/) installed (version 20.10 or later)
+- [Docker Compose](https://docs.docker.com/compose/install/) installed (comes with Docker Desktop)
+- At least 8GB of RAM available
+- At least 15GB of free disk space
 
 ## 🚀 Fastest Setup (Docker)
 
@@ -16,10 +26,12 @@ mkdir -p data/sessions
 # Start services with Docker Compose
 docker compose up -d
 
-# Pull the AI model
+# Pull the AI model (this may take several minutes depending on your connection)
 docker exec archie-ollama ollama pull qwen3:4b
 ```
-# WARNING THIS TAKES LIKE 30 YEARS TO DO SO BE PREPARED
+
+**Note:** The model download is approximately 2.5GB and may take 5-15 minutes depending on your internet connection.
+
 Then open: http://localhost:5000
 
 ## 📋 Common Commands
@@ -41,7 +53,7 @@ docker compose logs -f ollama       # Just Ollama
 
 ### Manage Models
 ```bash
-    docker exec archie-ollama ollama list                    # List installed models
+docker exec archie-ollama ollama list                    # List installed models
 docker exec archie-ollama ollama pull qwen3:4b           # Pull default model
 docker exec archie-ollama ollama pull qwen3:235b         # Pull advanced model (larger)
 docker exec archie-ollama ollama rm qwen3:4b             # Remove a model
