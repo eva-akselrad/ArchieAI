@@ -6,6 +6,9 @@ import os
 import json
 import secrets
 import hashlib
+import re
+import logging
+import threading
 from datetime import datetime
 from functools import wraps
 from typing import Optional, Dict, List
@@ -18,6 +21,13 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from lib import GemInterface
 from lib.DataCollector import DataCollector
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Constants
+TOOL_RESULT_PREVIEW_LENGTH = 500
 
 # Initialize AI interface
 gemini = GemInterface.AiInterface()
@@ -32,6 +42,7 @@ class APIKeyManager:
     def __init__(self, data_dir: str = "data/api"):
         self.data_dir = data_dir
         self.keys_file = os.path.join(data_dir, "api_keys.json")
+        self._lock = threading.Lock()
         
         # Ensure directory exists
         os.makedirs(self.data_dir, exist_ok=True)
@@ -115,15 +126,17 @@ class APIKeyManager:
             return None
             
         key_hash = self._hash_key(api_key)
-        keys = self._load_keys()
         
-        for key_id, key_data in keys.items():
-            if key_data["key_hash"] == key_hash and key_data["is_active"]:
-                # Update usage statistics
-                key_data["last_used"] = datetime.now().isoformat()
-                key_data["usage_count"] += 1
-                self._save_keys(keys)
-                return key_data
+        with self._lock:
+            keys = self._load_keys()
+            
+            for key_id, key_data in keys.items():
+                if key_data["key_hash"] == key_hash and key_data["is_active"]:
+                    # Update usage statistics atomically
+                    key_data["last_used"] = datetime.now().isoformat()
+                    key_data["usage_count"] += 1
+                    self._save_keys(keys)
+                    return key_data.copy()
         
         return None
     
@@ -247,8 +260,9 @@ def generate_key():
     if not owner_email:
         return fk.jsonify({"error": "owner_email is required"}), 400
     
-    # Basic email validation
-    if "@" not in owner_email or len(owner_email) > 255:
+    # Email validation using regex pattern
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, owner_email) or len(owner_email) > 255:
         return fk.jsonify({"error": "Invalid email address"}), 400
     
     result = api_key_manager.generate_api_key(name, owner_email, description)
@@ -402,7 +416,7 @@ def chat_stream():
                         if chunk.get('tool_name'):
                             json_safe_payload = {
                                 'tool_name': chunk.get('tool_name'),
-                                'tool_result_preview': str(chunk.get('tool_result'))[:500]
+                                'tool_result_preview': str(chunk.get('tool_result'))[:TOOL_RESULT_PREVIEW_LENGTH]
                             }
                             yield f"data: {json.dumps({'tool_call': json_safe_payload})}\n\n"
                         elif chunk.get('final'):
@@ -425,7 +439,7 @@ def chat_stream():
             
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:
-            print(f"Error during streaming: {e}")
+            logger.error(f"Error during streaming: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
         finally:
             if loop is not None and not loop.is_closed():
