@@ -1132,19 +1132,8 @@ while (reader) {
     }
 }
 
-// Using EventSource (browser)
-const eventSource = new EventSource(
-    "http://localhost:5001/api/v1/chat/stream?" + 
-    new URLSearchParams({ message: "Tell me about Arcadia" }),
-    { headers: { "X-API-Key": API_KEY } }  // Note: EventSource has limited header support
-);
-
-eventSource.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.token) {
-        document.getElementById("response").innerText += data.token;
-    }
-};</code></pre>
+// Note: Browser EventSource API does NOT support custom headers.
+// For browser streaming with API key auth, use fetch with ReadableStream as shown above.</code></pre>
                     </div>
                     <div id="stream-curl" class="code-content">
                         <pre><code>curl -N -X POST http://localhost:5001/api/v1/chat/stream \\
@@ -1795,7 +1784,7 @@ if __name__ == "__main__":
     # Run as standalone API server
     app = create_api_app()
     logger.info("Starting ArchieAI API Server...")
-    logger.info("API documentation available at /api/v1/health")
+    logger.info("API documentation available at http://localhost:5001/api/v1/")
     # Use environment variable to control debug mode (default: False for security)
     debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     app.run(host="0.0.0.0", port=5001, debug=debug_mode)
