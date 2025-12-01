@@ -1611,6 +1611,19 @@ def revoke_key(key_id):
 
 # Chat API Endpoints (require API key)
 
+async def collect_streaming_response(message: str) -> str:
+    """Collect full response from streaming AI generator."""
+    full_response = ""
+    async for chunk in gemini.Archie_streaming(message):
+        if isinstance(chunk, str):
+            full_response += chunk
+        elif isinstance(chunk, dict):
+            # Skip tool calls and final markers for non-streaming response
+            if chunk.get('final'):
+                break
+    return full_response
+
+
 @api_bp.route("/chat", methods=["POST"])
 @require_api_key
 def chat():
@@ -1637,8 +1650,8 @@ def chat():
     if not message:
         return fk.jsonify({"error": "message is required"}), 400
     
-    # Get response from AI
-    response = asyncio.run(gemini.Archie(message))
+    # Get response from AI using streaming method (Archie method is deprecated)
+    response = asyncio.run(collect_streaming_response(message))
     
     generation_time = time.time() - start_time
     
