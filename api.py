@@ -488,6 +488,8 @@ def create_api_app():
 if __name__ == "__main__":
     # Run as standalone API server
     app = create_api_app()
-    print("Starting ArchieAI API Server...")
-    print("API documentation available at /api/v1/health")
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    logger.info("Starting ArchieAI API Server...")
+    logger.info("API documentation available at /api/v1/health")
+    # Use environment variable to control debug mode (default: False for security)
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host="0.0.0.0", port=5001, debug=debug_mode)
