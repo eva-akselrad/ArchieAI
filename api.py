@@ -269,6 +269,13 @@ def generate_key():
     return fk.jsonify(result), 201
 
 
+@api_bp.route("/", methods=["GET"])
+def api_index():
+    """API index endpoint."""
+    return fk.jsonify({
+        "message": "Welcome to the ArchieAI API",
+        "documentation_url": "/api/v1/health"
+    })
 @api_bp.route("/keys", methods=["GET"])
 def list_keys():
     """
