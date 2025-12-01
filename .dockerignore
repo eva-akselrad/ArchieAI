@@ -1,0 +1,39 @@
+# Git files
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment files
+# Note: .env is excluded from build but mounted as volume at runtime
+.env
+
+# Data directory (will be mounted as volume)
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Build artifacts
+target/
+error.txt
+
+# Documentation
+README.md
+sample_qr.png
