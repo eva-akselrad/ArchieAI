@@ -14,7 +14,7 @@ pub struct Message {
 }
 
 impl Message {
-    //This is only used in tests 
+    //This is only used in tests
     fn _to_chat_message(&self) -> ChatMessage {
         match self.role.as_str() {
             "system" => ChatMessage::system(self.content.clone()),
@@ -36,10 +36,7 @@ impl AiInterface {
     /// Usage:
     ///   let ai = AiInterface::new(false, 3, 1.0, 15);
     ///   let result = ai.archie("When is fall break?").await;
-    pub fn new(
-        debug: bool,
-
-    ) -> Self {
+    pub fn new(debug: bool) -> Self {
         // Load the variables from the .env file into the environment
         dotenv::dotenv().ok();
 
@@ -165,7 +162,7 @@ mod tests {
             role: "user".to_string(),
             content: "Hello".to_string(),
         };
-        
+
         assert_eq!(msg.role, "user");
         assert_eq!(msg.content, "Hello");
     }
@@ -176,7 +173,7 @@ mod tests {
             role: "user".to_string(),
             content: "Hello".to_string(),
         };
-        
+
         let _chat_msg = msg._to_chat_message();
         // Just verify it doesn't panic
         assert!(true);
@@ -188,7 +185,7 @@ mod tests {
             role: "assistant".to_string(),
             content: "Hi there".to_string(),
         };
-        
+
         let _chat_msg = msg._to_chat_message();
         assert!(true);
     }
@@ -199,7 +196,7 @@ mod tests {
             role: "system".to_string(),
             content: "System prompt".to_string(),
         };
-        
+
         let _chat_msg = msg._to_chat_message();
         assert!(true);
     }
@@ -210,7 +207,7 @@ mod tests {
             role: "user".to_string(),
             content: "Test message".to_string(),
         };
-        
+
         let json = serde_json::to_string(&msg).expect("Failed to serialize");
         assert!(json.contains("user"));
         assert!(json.contains("Test message"));
@@ -220,7 +217,7 @@ mod tests {
     fn test_message_deserialization() {
         let json = r#"{"role": "assistant", "content": "Response"}"#;
         let msg: Message = serde_json::from_str(json).expect("Failed to deserialize");
-        
+
         assert_eq!(msg.role, "assistant");
         assert_eq!(msg.content, "Response");
     }
@@ -231,7 +228,7 @@ mod tests {
             role: "user".to_string(),
             content: "Test".to_string(),
         };
-        
+
         let cloned = msg.clone();
         assert_eq!(msg.role, cloned.role);
         assert_eq!(msg.content, cloned.content);
@@ -256,11 +253,8 @@ mod tests {
         let ai = AiInterface::new(false);
         // This test will fail without Ollama running, but we can test the structure
         // In a real environment, you'd mock the Ollama client
-        let result = ai.archie_streaming(
-            "Test query".to_string(),
-            None,
-        ).await;
-        
+        let result = ai.archie_streaming("Test query".to_string(), None).await;
+
         // We can't test the actual result without Ollama, but we can verify the function signature works
         assert!(result.is_ok() || result.is_err());
     }
@@ -268,7 +262,7 @@ mod tests {
     #[tokio::test]
     async fn test_archie_streaming_with_history() {
         let ai = AiInterface::new(false);
-        
+
         let history = vec![
             Message {
                 role: "user".to_string(),
@@ -279,12 +273,11 @@ mod tests {
                 content: "Previous answer".to_string(),
             },
         ];
-        
-        let result = ai.archie_streaming(
-            "Follow-up question".to_string(),
-            Some(history),
-        ).await;
-        
+
+        let result = ai
+            .archie_streaming("Follow-up question".to_string(), Some(history))
+            .await;
+
         // We can't test the actual result without Ollama, but we can verify the function signature works
         assert!(result.is_ok() || result.is_err());
     }
@@ -292,12 +285,11 @@ mod tests {
     #[tokio::test]
     async fn test_async_web_search_structure() {
         let ai = AiInterface::new(false);
-        
-        let result = ai.async_web_search(
-            "Test query".to_string(),
-            "Test system prompt".to_string(),
-        ).await;
-        
+
+        let result = ai
+            .async_web_search("Test query".to_string(), "Test system prompt".to_string())
+            .await;
+
         // Can't test actual result without Ollama
         assert!(result.is_ok() || result.is_err());
     }
@@ -305,15 +297,24 @@ mod tests {
     #[test]
     fn test_multiple_message_conversions() {
         let messages = vec![
-            Message { role: "system".to_string(), content: "System".to_string() },
-            Message { role: "user".to_string(), content: "User".to_string() },
-            Message { role: "assistant".to_string(), content: "Assistant".to_string() },
+            Message {
+                role: "system".to_string(),
+                content: "System".to_string(),
+            },
+            Message {
+                role: "user".to_string(),
+                content: "User".to_string(),
+            },
+            Message {
+                role: "assistant".to_string(),
+                content: "Assistant".to_string(),
+            },
         ];
-        
+
         for msg in messages {
             let _ = msg._to_chat_message();
         }
-        
+
         assert!(true);
     }
 
@@ -323,7 +324,7 @@ mod tests {
             role: "user".to_string(),
             content: "Test".to_string(),
         };
-        
+
         let debug_string = format!("{:?}", msg);
         assert!(debug_string.contains("user"));
         assert!(debug_string.contains("Test"));

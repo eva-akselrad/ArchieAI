@@ -40,9 +40,7 @@ impl DataCollector {
             Self::create_json_file(&json_file);
         }
 
-        DataCollector {
-            json_file,
-        }
+        DataCollector { json_file }
     }
 
     fn create_json_file(json_file: &PathBuf) {
@@ -116,11 +114,11 @@ mod tests {
     fn test_data_collector_new() {
         let test_dir = setup_test_dir("data_collector_new");
         let collector = DataCollector::new(&test_dir);
-        
+
         // Check that directory and JSON file are created
         assert!(std::path::Path::new(&test_dir).exists());
         assert!(collector.json_file.exists());
-        
+
         cleanup_test_dir(&test_dir);
     }
 
@@ -128,7 +126,7 @@ mod tests {
     fn test_log_interaction() {
         let test_dir = setup_test_dir("log_interaction");
         let collector = DataCollector::new(&test_dir);
-        
+
         collector.log_interaction(
             "session123".to_string(),
             Some("test@example.com".to_string()),
@@ -138,11 +136,11 @@ mod tests {
             "Arcadia is a university.".to_string(),
             1.234,
         );
-        
+
         // Read the JSON file
         let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
         let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
-        
+
         assert_eq!(data.len(), 1);
         assert_eq!(data[0].session_id, "session123");
         assert_eq!(data[0].user_email, "test@example.com");
@@ -150,7 +148,7 @@ mod tests {
         assert_eq!(data[0].answer, "Arcadia is a university.");
         assert_eq!(data[0].question_length, 16);
         assert_eq!(data[0].answer_length, 24);
-        
+
         cleanup_test_dir(&test_dir);
     }
 
@@ -158,7 +156,7 @@ mod tests {
     fn test_log_multiple_interactions() {
         let test_dir = setup_test_dir("log_multiple");
         let collector = DataCollector::new(&test_dir);
-        
+
         collector.log_interaction(
             "session1".to_string(),
             Some("user1@example.com".to_string()),
@@ -168,7 +166,7 @@ mod tests {
             "Answer 1".to_string(),
             1.0,
         );
-        
+
         collector.log_interaction(
             "session2".to_string(),
             Some("user2@example.com".to_string()),
@@ -178,14 +176,14 @@ mod tests {
             "Answer 2".to_string(),
             2.0,
         );
-        
+
         let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
         let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
-        
+
         assert_eq!(data.len(), 2);
         assert_eq!(data[0].session_id, "session1");
         assert_eq!(data[1].session_id, "session2");
-        
+
         cleanup_test_dir(&test_dir);
     }
 
@@ -193,7 +191,7 @@ mod tests {
     fn test_log_interaction_guest_user() {
         let test_dir = setup_test_dir("log_guest");
         let collector = DataCollector::new(&test_dir);
-        
+
         collector.log_interaction(
             "session123".to_string(),
             None, // No user email
@@ -203,13 +201,13 @@ mod tests {
             "Answer".to_string(),
             1.5,
         );
-        
+
         let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
         let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
-        
+
         assert_eq!(data.len(), 1);
         assert_eq!(data[0].user_email, "guest"); // Should default to "guest"
-        
+
         cleanup_test_dir(&test_dir);
     }
 
@@ -217,7 +215,7 @@ mod tests {
     fn test_generation_time_rounding() {
         let test_dir = setup_test_dir("time_rounding");
         let collector = DataCollector::new(&test_dir);
-        
+
         collector.log_interaction(
             "session".to_string(),
             Some("test@example.com".to_string()),
@@ -227,12 +225,12 @@ mod tests {
             "Answer".to_string(),
             1.23456789, // Should be rounded to 2 decimal places
         );
-        
+
         let content = fs::read_to_string(&collector.json_file).expect("Failed to read JSON file");
         let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
-        
+
         assert_eq!(data[0].generation_time_seconds, 1.23);
-        
+
         cleanup_test_dir(&test_dir);
     }
 
@@ -250,11 +248,11 @@ mod tests {
             answer_length: 11,
             generation_time_seconds: 1.5,
         };
-        
+
         let json = serde_json::to_string(&interaction).expect("Failed to serialize");
         assert!(json.contains("test_session"));
         assert!(json.contains("test@example.com"));
-        
+
         let deserialized: Interaction = serde_json::from_str(&json).expect("Failed to deserialize");
         assert_eq!(deserialized.session_id, "test_session");
     }
@@ -262,7 +260,7 @@ mod tests {
     #[test]
     fn test_persistence_across_instances() {
         let test_dir = setup_test_dir("persistence");
-        
+
         {
             let collector1 = DataCollector::new(&test_dir);
             collector1.log_interaction(
@@ -275,7 +273,7 @@ mod tests {
                 1.0,
             );
         }
-        
+
         // Create a new instance and log another interaction
         {
             let collector2 = DataCollector::new(&test_dir);
@@ -288,14 +286,16 @@ mod tests {
                 "Answer 2".to_string(),
                 2.0,
             );
-            
+
             // Read and verify both interactions are present
-            let content = fs::read_to_string(&collector2.json_file).expect("Failed to read JSON file");
-            let data: Vec<Interaction> = serde_json::from_str(&content).expect("Failed to parse JSON");
-            
+            let content =
+                fs::read_to_string(&collector2.json_file).expect("Failed to read JSON file");
+            let data: Vec<Interaction> =
+                serde_json::from_str(&content).expect("Failed to parse JSON");
+
             assert_eq!(data.len(), 2);
         }
-        
+
         cleanup_test_dir(&test_dir);
     }
 }
