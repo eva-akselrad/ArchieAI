@@ -102,9 +102,9 @@ let app = Router::new()
 **The Request Flow:**
 > "When a request comes in, it hits our Axum server on port 5000. The server extracts session cookies, validates authentication, retrieves conversation history, and then calls the Ollama API running locally on port 11434."
 
-**Three Core Modules:**
+**Four Core Modules:**
 
-> "I structured the backend into three main modules:"
+> "I structured the backend into four main modules:"
 
 **1. `main.rs` - The Web Server:**
 > "This handles all HTTP routing, request parsing, cookie management, and response formatting. It's the entry point for everything."
@@ -114,8 +114,6 @@ let app = Router::new()
 
 **3. `gem_interface.rs` - AI Integration:**
 > "This is the interface to Ollama. It handles building prompts, sending requests to the AI, and streaming back responses token by token."
-
-**Plus a bonus module:**
 
 **4. `data_collector.rs` - Analytics:**
 > "This logs every interaction for my data science class — questions, answers, timing, and session info."
