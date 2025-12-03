@@ -6,6 +6,13 @@ import asyncio
 import time
 import flask as fk
 import json
+import secrets
+import hashlib
+import re
+import logging
+import datetime as dt_module
+from functools import wraps
+from typing import Optional, Dict, List
 proj_root = os.path.dirname(__file__)         
 src_dir = os.path.join(proj_root, "src")
 sys.path.insert(0, src_dir)
@@ -15,10 +22,140 @@ from lib.SessionManager import SessionManager
 from lib.DataCollector import DataCollector
 from werkzeug.security import generate_password_hash
 
+# Configure logging for API
+logging.basicConfig(level=logging.INFO)
+api_logger = logging.getLogger("api")
+
 gemini = GemInterface.AiInterface()
 
 session_manager = SessionManager(data_dir="data")
 data_collector = DataCollector(data_dir="data")
+
+# API-specific data collector (separate from main app)
+api_data_collector = DataCollector(data_dir="data/api")
+
+# Constants for API
+TOOL_RESULT_PREVIEW_LENGTH = 500
+
+
+class APIKeyManager:
+    """Manages API keys for external access to ArchieAI."""
+    
+    def __init__(self, data_dir: str = "data/api"):
+        self.data_dir = data_dir
+        self.keys_file = os.path.join(data_dir, "api_keys.json")
+        self._lock = threading.Lock()
+        
+        # Ensure directory exists
+        os.makedirs(self.data_dir, exist_ok=True)
+        
+        # Initialize keys file if it doesn't exist
+        if not os.path.exists(self.keys_file):
+            self._save_keys({})
+    
+    def _load_keys(self) -> Dict:
+        """Load API keys from JSON file."""
+        try:
+            with open(self.keys_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+    
+    def _save_keys(self, keys: Dict):
+        """Save API keys to JSON file."""
+        with open(self.keys_file, "w", encoding="utf-8") as f:
+            json.dump(keys, f, indent=4, ensure_ascii=False)
+    
+    def _hash_key(self, api_key: str) -> str:
+        """Hash an API key for storage."""
+        return hashlib.sha256(api_key.encode()).hexdigest()
+    
+    def generate_api_key(self, name: str, owner_email: str, description: str = "") -> Dict:
+        """Generate a new API key."""
+        keys = self._load_keys()
+        
+        key_id = secrets.token_urlsafe(16)
+        api_key = f"archie_{secrets.token_urlsafe(32)}"
+        key_hash = self._hash_key(api_key)
+        
+        keys[key_id] = {
+            "key_id": key_id,
+            "key_hash": key_hash,
+            "name": name,
+            "owner_email": owner_email,
+            "description": description,
+            "created_at": dt_module.datetime.now().isoformat(),
+            "last_used": None,
+            "is_active": True,
+            "usage_count": 0
+        }
+        
+        self._save_keys(keys)
+        
+        return {
+            "key_id": key_id,
+            "api_key": api_key,
+            "name": name,
+            "owner_email": owner_email,
+            "created_at": keys[key_id]["created_at"],
+            "message": "Save this API key - it will not be shown again!"
+        }
+    
+    def validate_api_key(self, api_key: str) -> Optional[Dict]:
+        """Validate an API key and return its metadata if valid."""
+        if not api_key:
+            return None
+            
+        key_hash = self._hash_key(api_key)
+        
+        with self._lock:
+            keys = self._load_keys()
+            
+            for key_id, key_data in keys.items():
+                if key_data["key_hash"] == key_hash and key_data["is_active"]:
+                    key_data["last_used"] = dt_module.datetime.now().isoformat()
+                    key_data["usage_count"] += 1
+                    self._save_keys(keys)
+                    return key_data.copy()
+        
+        return None
+    
+    def revoke_api_key(self, key_id: str, owner_email: str) -> bool:
+        """Revoke an API key."""
+        keys = self._load_keys()
+        
+        if key_id not in keys:
+            return False
+            
+        if keys[key_id]["owner_email"] != owner_email:
+            return False
+        
+        keys[key_id]["is_active"] = False
+        self._save_keys(keys)
+        return True
+    
+    def list_keys(self, owner_email: str) -> List[Dict]:
+        """List all API keys for a user."""
+        keys = self._load_keys()
+        user_keys = []
+        
+        for key_id, key_data in keys.items():
+            if key_data["owner_email"] == owner_email:
+                user_keys.append({
+                    "key_id": key_data["key_id"],
+                    "name": key_data["name"],
+                    "description": key_data["description"],
+                    "created_at": key_data["created_at"],
+                    "last_used": key_data["last_used"],
+                    "is_active": key_data["is_active"],
+                    "usage_count": key_data["usage_count"]
+                })
+        
+        return user_keys
+
+
+# Initialize API key manager
+api_key_manager = APIKeyManager()
 
 app = fk.Flask(__name__)
 
@@ -362,6 +499,276 @@ def background_checker():
     os.makedirs(os.path.dirname("data/scrape_results.json"), exist_ok=True)
     with open("data/scrape_results.json", "w", encoding="utf-8") as f:
         json.dump(dictionary, f, ensure_ascii=False, indent=4)
+
+
+# ============================================================================
+# EXTERNAL API (API Key Authentication)
+# ============================================================================
+
+# Create Flask Blueprint for external API routes
+api_bp = fk.Blueprint("external_api", __name__, url_prefix="/api/v1")
+
+
+def require_api_key(f):
+    """Decorator to require API key authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = fk.request.headers.get("X-API-Key")
+        
+        if not api_key:
+            auth_header = fk.request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                api_key = auth_header[7:]
+        
+        if not api_key:
+            return fk.jsonify({
+                "error": "API key required",
+                "message": "Please provide an API key via X-API-Key header or Authorization: Bearer <key>"
+            }), 401
+        
+        key_data = api_key_manager.validate_api_key(api_key)
+        if not key_data:
+            return fk.jsonify({
+                "error": "Invalid API key",
+                "message": "The provided API key is invalid or has been revoked"
+            }), 401
+        
+        fk.g.api_key_data = key_data
+        return f(*args, **kwargs)
+    
+    return decorated_function
+
+
+async def collect_streaming_response_api(message: str) -> str:
+    """Collect full response from streaming AI generator for API."""
+    full_response = ""
+    async for chunk in gemini.Archie_streaming(message):
+        if isinstance(chunk, str):
+            full_response += chunk
+        elif isinstance(chunk, dict):
+            if chunk.get('final'):
+                break
+    return full_response
+
+
+# API Key Management Endpoints
+
+@api_bp.route("/keys/generate", methods=["POST"])
+def api_generate_key():
+    """Generate a new API key."""
+    data = fk.request.get_json()
+    
+    if not data:
+        return fk.jsonify({"error": "Request body required"}), 400
+    
+    name = data.get("name")
+    owner_email = data.get("owner_email")
+    description = data.get("description", "")
+    
+    if not name:
+        return fk.jsonify({"error": "name is required"}), 400
+    if not owner_email:
+        return fk.jsonify({"error": "owner_email is required"}), 400
+    
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, owner_email) or len(owner_email) > 255:
+        return fk.jsonify({"error": "Invalid email address"}), 400
+    
+    result = api_key_manager.generate_api_key(name, owner_email, description)
+    return fk.jsonify(result), 201
+
+
+@api_bp.route("/keys", methods=["GET"])
+def api_list_keys():
+    """List all API keys for a user."""
+    owner_email = fk.request.args.get("owner_email")
+    
+    if not owner_email:
+        return fk.jsonify({"error": "owner_email query parameter required"}), 400
+    
+    keys = api_key_manager.list_keys(owner_email)
+    return fk.jsonify({"keys": keys})
+
+
+@api_bp.route("/keys/<key_id>/revoke", methods=["POST"])
+def api_revoke_key(key_id):
+    """Revoke an API key."""
+    data = fk.request.get_json()
+    
+    if not data:
+        return fk.jsonify({"error": "Request body required"}), 400
+    
+    owner_email = data.get("owner_email")
+    
+    if not owner_email:
+        return fk.jsonify({"error": "owner_email is required"}), 400
+    
+    success = api_key_manager.revoke_api_key(key_id, owner_email)
+    
+    if success:
+        return fk.jsonify({"message": "API key revoked successfully"})
+    else:
+        return fk.jsonify({"error": "Failed to revoke key - key not found or unauthorized"}), 404
+
+
+# Chat API Endpoints (require API key)
+
+@api_bp.route("/chat", methods=["POST"])
+@require_api_key
+def api_chat():
+    """Send a message to ArchieAI and get a response."""
+    start_time = time.time()
+    
+    data = fk.request.get_json()
+    
+    if not data:
+        return fk.jsonify({"error": "Request body required"}), 400
+    
+    message = data.get("message")
+    
+    if not message:
+        return fk.jsonify({"error": "message is required"}), 400
+    
+    response = asyncio.run(collect_streaming_response_api(message))
+    
+    generation_time = time.time() - start_time
+    
+    api_data_collector.log_interaction(
+        session_id=f"api_{fk.g.api_key_data['key_id']}",
+        user_email=fk.g.api_key_data["owner_email"],
+        ip_address=fk.request.remote_addr,
+        device_info=fk.request.user_agent.string,
+        question=message,
+        answer=response,
+        generation_time_seconds=generation_time
+    )
+    
+    return fk.jsonify({
+        "response": response,
+        "generation_time_seconds": round(generation_time, 2)
+    })
+
+
+@api_bp.route("/chat/stream", methods=["POST"])
+@require_api_key
+def api_chat_stream():
+    """Send a message to ArchieAI and get a streaming response."""
+    start_time = time.time()
+    
+    data = fk.request.get_json()
+    
+    if not data:
+        return fk.jsonify({"error": "Request body required"}), 400
+    
+    message = data.get("message")
+    
+    if not message:
+        return fk.jsonify({"error": "message is required"}), 400
+    
+    ip_address = fk.request.remote_addr
+    device_info = fk.request.user_agent.string
+    key_data = fk.g.api_key_data
+    
+    def generate():
+        full_response = ""
+        loop = None
+        try:
+            loop = asyncio.new_event_loop()
+            async_gen = gemini.Archie_streaming(message)
+            
+            while True:
+                try:
+                    chunk = loop.run_until_complete(async_gen.__anext__())
+                    
+                    if isinstance(chunk, str):
+                        full_response += chunk
+                        yield f"data: {json.dumps({'token': chunk})}\n\n"
+                    elif isinstance(chunk, dict):
+                        if chunk.get('tool_name'):
+                            json_safe_payload = {
+                                'tool_name': chunk.get('tool_name'),
+                                'tool_result_preview': str(chunk.get('tool_result'))[:TOOL_RESULT_PREVIEW_LENGTH]
+                            }
+                            yield f"data: {json.dumps({'tool_call': json_safe_payload})}\n\n"
+                        elif chunk.get('final'):
+                            pass
+                except StopAsyncIteration:
+                    break
+            
+            generation_time = time.time() - start_time
+            
+            api_data_collector.log_interaction(
+                session_id=f"api_{key_data['key_id']}",
+                user_email=key_data["owner_email"],
+                ip_address=ip_address,
+                device_info=device_info,
+                question=message,
+                answer=full_response,
+                generation_time_seconds=generation_time
+            )
+            
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except Exception as e:
+            api_logger.error(f"Error during streaming: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        finally:
+            if loop is not None and not loop.is_closed():
+                loop.close()
+    
+    return fk.Response(generate(), mimetype='text/event-stream')
+
+
+@api_bp.route("/health", methods=["GET"])
+def api_health():
+    """Health check endpoint (no authentication required)."""
+    return fk.jsonify({
+        "status": "healthy",
+        "service": "ArchieAI API",
+        "version": "1.0.0"
+    })
+
+
+@api_bp.route("/usage", methods=["GET"])
+@require_api_key
+def api_usage():
+    """Get usage statistics for the authenticated API key."""
+    key_data = fk.g.api_key_data
+    return fk.jsonify({
+        "key_id": key_data["key_id"],
+        "name": key_data["name"],
+        "usage_count": key_data["usage_count"],
+        "last_used": key_data["last_used"],
+        "created_at": key_data["created_at"]
+    })
+
+
+# API Documentation
+@api_bp.route("/", methods=["GET"])
+@api_bp.route("/docs", methods=["GET"])
+def api_docs():
+    """Serve API documentation page."""
+    # Import the documentation HTML from the api.py module
+    try:
+        from api import API_DOCUMENTATION_HTML
+        return fk.Response(API_DOCUMENTATION_HTML, mimetype='text/html')
+    except ImportError:
+        return fk.jsonify({
+            "message": "Welcome to the ArchieAI API",
+            "version": "1.0.0",
+            "endpoints": {
+                "docs": "/api/v1/docs",
+                "health": "/api/v1/health",
+                "keys/generate": "/api/v1/keys/generate",
+                "keys": "/api/v1/keys",
+                "chat": "/api/v1/chat",
+                "chat/stream": "/api/v1/chat/stream",
+                "usage": "/api/v1/usage"
+            }
+        })
+
+
+# Register the API blueprint with the main app
+app.register_blueprint(api_bp)
 
     
 if __name__ == "__main__":

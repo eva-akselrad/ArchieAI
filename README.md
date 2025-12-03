@@ -92,12 +92,70 @@ ArchieAI uses Ollama's tool calling feature to intelligently search the web when
 - `POST /api/sessions/new` - Create new session
 - `POST /api/sessions/switch/<id>` - Switch to different session
 
+## External API (api.py)
+
+ArchieAI includes an external API for third-party applications to integrate with the AI assistant.
+
+### Running the API Server
+
+```bash
+python api.py
+```
+
+The API server runs on port 5001 by default.
+
+### API Key Management
+
+Generate an API key before using the chat endpoints:
+
+```bash
+# Generate a new API key
+curl -X POST http://localhost:5001/api/v1/keys/generate \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My App", "owner_email": "user@example.com"}'
+```
+
+**Important:** Save the returned `api_key` - it will only be shown once!
+
+### External API Endpoints
+
+#### Key Management
+- `POST /api/v1/keys/generate` - Generate a new API key
+- `GET /api/v1/keys?owner_email=<email>` - List all keys for a user
+- `POST /api/v1/keys/<key_id>/revoke` - Revoke an API key
+
+#### Chat (requires API key)
+- `POST /api/v1/chat` - Send a message and get a response
+- `POST /api/v1/chat/stream` - Send a message and get a streaming response
+
+#### Utility
+- `GET /api/v1/health` - Health check (no authentication required)
+- `GET /api/v1/usage` - Get usage statistics for your API key
+
+### Example: Using the Chat API
+
+```bash
+# Using X-API-Key header
+curl -X POST http://localhost:5001/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: archie_your_api_key_here" \
+  -d '{"message": "What are the dining hall hours?"}'
+
+# Using Authorization header
+curl -X POST http://localhost:5001/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer archie_your_api_key_here" \
+  -d '{"message": "What are the dining hall hours?"}'
+```
+
 ## Data Storage
 
 All data is stored locally in JSON files:
 - `data/users.json` - User accounts with hashed passwords
 - `data/sessions/*.json` - Individual chat sessions
 - `data/qna.json` - Question-answer pairs (legacy storage)
+- `data/api/api_keys.json` - API keys (hashed) for external access
+- `data/api/analytics.json` - API usage analytics
 
 ## Development
 
