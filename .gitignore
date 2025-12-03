@@ -22,4 +22,5 @@ env/
 /target
 data/scrape_results.json
 /data
+src/data/
 error.txt
